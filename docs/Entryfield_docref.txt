@@ -1,1 +1,1251 @@
 
+                    
+                    Entryfield classes and functions  - Reference documentation 
+
+<hr>                    
+Ef_Application 
+
+    Defines some parameters of the application.
+        
+        Category : minor  / configuration    
+    
+        public static function Ef_Application::setDateFormat($dateformat); 
+            defines the date format 
+            $dateformat is a combination of letters like in php "date" command
+                Y-m-d   -   is the default value- sample : 2063-07-20
+                d/m/y   -   french date format - sample : 20/7/63
+        public static function Ef_Application::getDateFormat()
+            gets the date format
+        public static function Ef_Application::getDefaultCentury()
+            gets the default century - currently, the value is '20'.
+    
+Ef_Array
+
+    This is a simple wrap around a bidimensional php array.
+        
+        Category : minor / data   
+    
+        Constructor
+            new Ef_Array($phparray)
+            where $phparray is a bidimensional php array.
+            
+        Example :     
+        << 
+            $efarray = new Ef_Array(array('1'=>array('a','b','c'), '2'=>array('cc',6502,'ef')));
+        >>
+        
+        Ef_Array::renderHtml()    
+            returns the html content of the table 
+                
+Ef_Config
+
+    Set configuration values and allows to get them back.
+
+        NOTE : These values will be identical for all users of the application. 
+
+        Category : essential / configuration
+
+        
+        public static function Ef_Config::set($key, $var, $keypref="def")
+            associates the value $var to the key $key,
+            with the prefix $keypref (optional) 
+    
+        public static function Ef_Config::get($key, $keypref="def")
+            returns the value of configuration associated with the key $key 
+            for the prefix $keypref (optional)         
+                                          
+        public static function Ef_Config::getVars($keypref="def")
+            return the table of all configuration variables
+            for the prefix $keypref (optional)
+
+Ef_Control 
+
+    Build controls for a given Ef_List
+        
+        Category : essential / rendering
+    
+        It is meant to be extended. Here is an example class : a simple control.
+    
+        <<
+            class ExampleControl extends Ef_Control 
+            {    
+                function controlRow ($oldrow, $newrow) 
+                {
+                    extract($oldrow, EXTR_PREFIX_ALL, 'old');
+                    extract($newrow);
+                    if (!$slit_it_title  && $oldslit_it_title != '') {
+                        $msgErr = Ef_Lang::get("Can't set empty the title of the item");
+                        $this->gravity = 100;
+                        $this->msgErr = $msgErr;
+                        $this->fieldnames[] = 'slit.it_title'; 
+                        Ef_Session::appendMessage('ProcessExample', $msgErr);
+                        return false;
+                    }
+                    return true;
+                    }
+            }
+        >>
+    
+        public function getMsgErr()
+            returns the error message set by the control
+            
+        public function getGravityErr()
+            returns the gravity (an integer) set by the control
+             
+        public function getFieldNames()
+            return the field names set in error by the control
+             
+        public function reset()
+            resets the error message, gravity and field names 
+    
+        @todo : accessors / setters                 
+
+
+Ef_Db
+
+    Opens or closes the communication channel to a Sql database
+
+        Category : essential / configuration
+
+        public static function Ef_Db::dbOpen($dbid='def')
+            opens the $dbid database
+            $dbid is an internal alias for the database
+                it is optional : if the application uses a single database, 
+                this alias may not be set (default value is 'def')
+    
+            for dbOpen to work, it is necessary to set some configuration variables.
+    
+            <<
+            // for sqlite
+            Ef_Config::set('f_sqlitedb_path', $sqlitepath);
+            Ef_Config::set('f_db_database', $databasename, $dbid);
+            Ef_Config::set('f_db_dbtype','sqlite');
+            Ef_Config::set('f_db_host', 'localhost');
+            >>
+            
+            where $sqlitepath is the path to the sqlite data file
+            $databasename is the name of the sqlite data file
+                Note : the suffix '.sqlite' will be added to the file name. 
+                
+            <<
+            // for mysql 
+            Ef_Config::set('f_db_database', $databasename, $dbid);
+            Ef_Config::set('f_db_dbtype','mysql', $dbid);
+            Ef_Config::set('f_db_host', $hostname, $dbid);
+            Ef_Config::set('f_db_user', $username, $dbid);
+            Ef_Config::set('f_db_pass', $password, $dbid);
+            >>
+            
+            where   $databasename is the name of the mysql database
+                    $hostname is the name of the mysql server host
+                    $username is the name of the mysql user
+                    $username is the mysql password of this user
+        
+                
+        public static function Ef_Db::dbClose($dbid='def')
+            closes the $dbid database
+                      
+        public static function Ef_Db::dbCloseAll()
+            close all databases
+        
+Ef_Field
+
+    Defines the identity, the format and the appearance of fields.
+    
+        For Entryfield, the term "field" defines a column of a database table.
+
+        Category : essential / field definition
+        
+        public static function Ef_Field::construct ($argname, $argarray);
+            Creates a field of name $argname and of definition $argarray 
+            and returns the corresponding Ef_Field object.
+    
+        $argname is structured as follows
+             $tblalias.$fieldname 
+                where $tblalias is the alias for a table defined by Ef_SqlTable 
+                and $fieldname is the name of the field, as it is known in the database.
+                               
+        $argarray is an array of key / values, structured as follows
+
+        type
+                this key / value indicates the type of the field
+        keypos 
+                optional, this key / value indicates if the field belongs to the unique key of the table /
+                (this is used to generated sql update requests)
+                if the field belongs to the key of the table, keypos is an integer ; the first /
+                part of the key is 0, the second is 1 and so on.
+        translate
+                if this key is set to "do", the value of the field will be translated before display, /
+                using Ef_Lang::get method.
+                
+
+        the other key / values of the table depend on the field type, as described below : 
+
+        string  :   character string
+            len :   usual length 
+            maxlen :    maximal length
+    
+        select :    dropdown choice
+            len :   usual length
+            keyvals :   array of keys / values
+                        
+        date :      date
+            (no additional definition)                                                                                              
+    
+        text :      multiline text 
+            cols :  number of columns
+            rows :  number of rows
+
+        int :       integer
+            len         :   length                                                                              
+            aligninput  :   text alignment in field (right by default)
+                                  
+        amount :    amount
+            decpoint    :   decimal point
+            nbdec       :   number of decimals
+            septhous    :   thousand separator
+
+        button :    button
+            (no additional definition)                                                                                              
+            NOTE : field type unused - see rowbutton instead
+
+        rowbutton :     button
+            buttonprefix    :   technical name of the button (POST value)
+            buttontext      :   text of the button
+            rowidname       :   field name of the field which will identify the row
+                                concerned by the action (to update, suppress the row etc)
+              
+        radio :         radio button
+            keyvals :   array of keys / values
+
+        specific :      specific field type
+            class           :   name of the php class which defines the field type
+            this class must be defined as a subclass of Ef_Field
+            ( or one of its subclasses)
+                
+        public function getTbl()    
+            returns the table alias associated to the field
+            Example for field whose name is "com.test_news-id", will return "com"
+                      
+        public function getShortName()
+            returns the short name associated to the field 
+            Example for field whose name is "com.test_news-id", will return "test_news-id"
+            
+        public function getName()
+            returns the complete name associated to the field
+            Example for field whose name is "com.test_news-id", will return "com.test_news-id"
+    
+        public function getPostnameIrow($irow)
+            return the post name associated to the field for a given row of a list
+            Example for field whose name is "com.test_news-id" and row 0,
+             will return "com-test_news-id-0"  
+                            
+        public function getAttributes()
+            return the php table of attributes of the field
+            (in which attributes are type, len, etc.)
+             
+        public function getAttribute()
+            return the value of a given attribute of a field
+             Example :
+             << 
+             $gzpay_id = Ef_Field::construct('gzpay.payid', array('type'=>'int', 'keypos'=>'0'));
+             $gzpay_id->getAttribute('type'); //  will return 'int'.
+             >>
+              
+        public function getEditname($parms=array())
+            in the table $parms, if we set the parameter 'irow' to a given row, /
+            we will get the edit name of the field.
+            Example for field whose name is "com.test_news-id" and row 0, /
+            will return "com-test_news-id-0". 
+            NOTE : same as getPostnameIrow($irow)  
+            If the parameter 'irow' is not set, we will get the edit name without row suffix.
+            Example for field whose name is "com.test_news-id", will return "com-test_news-id"
+    
+         public function memToViewHtml($value, $parms=array())
+            converts a memory value to its external Html value, according to the type of the field
+            Example : an amount 10000 may be converted to € 10,000.00
+              
+        public function memToEditHtml($value, $parms=array()) 
+            converts a memory value to an input html widget, with the value 
+            Example : an amount 10000 may be converted to
+                << 
+                <input size="10" maxlength="10" name="gzt_test_name_id_12" value="€ 10,000.00">
+                >>
+            Some information are provided by the field definition (for example length and maxlength).        
+            $parms may contain the following key / values: 
+                'irow' : indicates on which row the value is present (in the above example : 12)
+                'disabled' : if the input field must be set disabled
+                'readonly' : if the input field must be set readonl
+                'aligninput' : may be set to right or left
+                'password' : the value 'true' will set an input field to be password style
+        
+        public function memToReadonlyHtml($value, $parms=array())
+            same as memToEditHtml, but will set the input field in readonly state     
+    
+        public function memToDisabledHtml($value, $parms=array()) 
+            same as memToEditHtml, but will set the input field in disabled state     
+    
+        public function memToHiddenHtml($value, $parms=array())
+            the input field will be present, but not visible     
+         
+        public function memToNoneHtml($value, $parms=array())
+            this function will convert the value to empty string ''
+             
+        public function memToSql($value, $parms=array())
+            this function will convert the memory value to a value storable in sql
+            for example, slashes may be added (see addslashes php function) 
+             
+        public function postHtmlToMem($value, $parms=array())
+            this function will convert a post value to its equivalent in memory format
+            for example a date in local format 'Month 5, Year' will be changed to YYYY-MM-DD
+                 
+        public function sqlToMem($value, $parms=array())
+            this function will convert the sql value to a memory value
+            for example, slashes may be removed (see stripslashes php function) 
+            
+        public static function Ef_Field::findByName ($fieldname)
+            Search a field by name and returns the corresponding object
+            or false if not found                
+        
+        public static function Ef_Field::getPostnameFromNameIrow($fieldname, $irow)
+            From a field name and a line number, returns /
+            the matching POST variable name of the field        
+            
+        public static function Ef_Field::getShortnameFromName($fieldname)
+            Gets the short name of a field from its complete name.
+             Example : "test_news-id" is the short name of "com.test_news-id"         
+            
+        public static function Ef_Field::getVarnameFromName($fieldname)     
+            Gets the variable name of a field from its complete name
+             When handled as a php variable, it is this variable name which will be used.                 
+             Example "com_test_news_id" à partir de "com.test_news-id"
+             
+        public static function Ef_Field::getValuenameFromName($argname) 
+            Gets the "value" name of a field, which is the name of its
+            value in the sql query template, before the value is replaced by its value
+             Example : %efpa-title-value% from name "efpa.title".
+             
+             
+
+                 
+
+    
+Ef_FieldSelect 
+
+    Defines a html Select field (aka dropdownlist). Extension of Ef_Field.
+    
+        public function setKeyVals($argkeyvals)
+            Defines the array of key / values presented by the select field.
+
+Ef_FieldRowButton 
+
+    Defines a Button field, visible on each row of the Ef_List. Extension of Ef_Field.
+     
+        public function getPostedRow ()
+            Gets the post value associated to the submit button.
+            Will return non empty value if button pressed.
+        
+    
+Ef_FieldRowIconButton               
+
+    Defines a Button field, visible on each row of the Ef_List. Extension of Ef_FieldRowButton.
+        This class is defined in considered as an extension, defined in F_FieldExtended.php
+
+        Constructor
+            Inside the array of parameters of the Ef_Field, the 'glyphicon' has to be defined.
+            Example : 'glyphicon'=>'glyphicon-floppy-disk'.     
+            <<
+                $upd_item = Ef_Field::construct('virtual.btn_upd_item',
+                array('type'=>'specific','class'=>'Ef_FieldRowIconButton', 'buttonprefix'=>'btn_upd_item',
+                'glyphicon'=>'glyphicon-floppy-disk', 'buttontext'=>Ef_Lang::get('Save'),'rowidname'=>'efit_id'));            
+            >>
+        
+Ef_Lang
+
+    Defines and to reads translations.
+        
+        Category : essential / configuration
+       
+        public static function Ef_Lang::set($origstring, $deststring, $language="def")
+            Defines $deststring as the translation for $origstring, for the language $language.
+            The strings may contain variable arguments, specified as %1, %2, %3, etc.
+            Examples :
+            <<      
+                Ef_Lang::set("Pay", "Please proceed to payment");                   
+                Ef_Lang::set("Identified as %1 and connected as %2",  / 
+                    "You are %1 and your login is %2");
+            >>                
+
+        public static function Ef_Lang::get($origstring, $language="def");        
+            Returns the translation of $origstring in language $language.
+            Variable arguments specified in translation as %1, %2, %3 etc, are set /
+            in a php array.
+            Example :  
+            <<
+                $paystr = Ef_Lang::get("Pay");
+                $connectstr = Ef_Lang::get("Identified as %1 and connected as %2", /
+                    array($username, $userlogin));
+            >>
+                    
+        public static function Ef_Lang::getVars($language="def");                             
+            Returns the array of translations for the language $language.
+        
+Ef_List
+
+    Interacts with data through a list or a form.
+        Ef_List is an extension of Ef_ReadList, and many functions come from this ancestor.
+    
+        Category : essential / data        
+        
+        This class has three main moments of use : declaration / processing / displaying
+        
+            <<
+            // 1. Declaration : creating a list request  
+            $list = new Ef_List('SimpleList', "
+                        select %fieldlist% from slitem slit %where% %orderby%
+                    ",'simple');
+            $list->setUpdateTable('slitem');
+            $list->buildSelectReq();
+            $list->setAllFieldState('edit');
+            
+            // ... adding an update button
+            $upditem = Ef_Field::construct('virtual.btn_upditem',
+                        array('type'=>'rowbutton','buttonprefix'=>'btn_upditem',
+                              'buttontext'=>Ef_Lang::get('Update item'),'rowidname'=>'slit_itid'));
+            $list->insertVirtualFieldAtEnd ('virtual.btn_upditem');
+            $list->setFieldState('virtual.btn_upditem','edit');        
+            $list->buildUpdateReq();    
+        
+            //  2. processing updates
+            if (count($_POST) > 0) {
+                $postedrow = $upditem->getPostedRow();
+                if ($postedrow !== false) {
+                    if ($list->processControl()) {   
+                        $list->processUpdate();
+                    }           
+                }       
+            }
+            
+            // 3. Displaying data
+            // This will call an Ef_ListView class to process display
+            $render = ($list->getRenderRows(array('variant'=>'simplehtmltable','rowtitle'=>'1')));
+            echo $render;
+            >>
+
+        public function getPostedArray() 
+            Returns the table of posted key / values associated to the list.
+            
+        public function getPostedMaxRow()   
+            Returns the max posted row value
+            @todo : check compatibility with getPostedArray
+
+        public function getPostedValue($key) 
+            Returns the posted value associated to a given posted key
+            
+        public function getFieldMemValue($fieldObj, $row)
+            Returns the memory value for the Ef_Field instance $fieldObj and the row $row            
+            
+        public function getChangedArray() 
+            Returns the table of posted key / values changed in the last form operation.
+            The changed array is the list of fields whose internal post value is different than
+            their internal listed value.
+             
+        public function getErrorMsgs()
+            Returns the array of error messages stored in the Ef_List
+            Notice : deprecated / rather use Ef_Session::getMessages.
+            
+        public function getErrorText($before='', $after="<br>\n")
+            Returns the complete text of error messages.
+            This returns a text of all error messages stored in the Ef_List 
+            Notice : deprecated / rather use Ef_Session::getMessages.
+            
+        public function setChangeStateFunction($changestatefunction)
+            Defines a function to change state of field according to their content or /
+            to other elements of the context, for example to protect values according to /
+            the user profile.
+            a ChangeStateFunction will be called for each row to render. It must have following arguments 
+            [
+                -   the calling Ef_List
+                -   a given result row coming from the list
+                -   an array of field states 
+            ]
+            and it will return a new array of field states.
+            Example of a change state function : will protect all fields against update,
+            if a field "efpa.protected" is set to 1.
+                <<
+                function menuChangeStateFunction ($efList, $resultrow, $fieldstatearray) {
+                    // set variable in a table for each column 
+                    $completedarray = $efList->extractCompletedFieldArray();
+                    $rowvalues = array();
+                    foreach ($completedarray as $key => $fieldname) {
+                        $varname = Ef_Field::getVarnameFromName ($fieldname);
+                        $rowvalues[$varname] = $resultrow[$key];
+                    }            
+                    if (isset($rowvalues['efpa_protected']) &&  $rowvalues['efpa_protected'] == '1') {
+                        $newfieldstatearray = array();    
+                        foreach ($fieldstatearray as $fieldname => $fieldstate) {
+                            if ($fieldstate == 'edit') {
+                                $newfieldstatearray[$fieldname] = 'readonly';
+                            } else {
+                                $newfieldstatearray[$fieldname] = $fieldstate;
+                            }
+                        }            
+                        $fieldstatearray = $newfieldstatearray;        
+                    }    
+                    return $fieldstatearray;
+                }            
+                >> 
+            
+        public function getChangeStateFunction() 
+            Returns the currently defined changeStateFunction.
+              
+        public function getUpdateQuery()
+            Returns the currently defined sql update query.
+             
+        public function setUpdateTable($argtablename)
+            Defines the update table as beging $argtablename.
+             
+        public function buildUpdateReq()
+            Builds update query according to table definition.
+             
+        public function searchNextUpdateVar()
+            Returns next update variable of the Ef_List, in "Valuename" format,
+                see Ef_Field::getValuenameFromName($argname) 
+                 Example : %efpa-title-value% from name "efpa.title".
+
+        public function resetNextUpdateVar()
+            Restart the search loop for searchNextUpdaetVar()
+             
+        public function registerControl( $classmethodarray )
+            Register a control method. See Ef_Control example.
+             
+        public function processControl()
+            Process all registered controls.
+             
+        public function isFieldInError($fieldname,$irow)    
+            Returns true if the field whose name is $fieldname has been set in error by a /
+            registered control, for row $irow.
+             
+        public function processUpdate()
+            Process update of the Ef_List from POST data.
+             
+        public function keepPostInSession($field)
+            Keeps all post values in session for a given field
+                
+    
+Ef_ListView
+
+    The Ef_ListView is the class used to render the content of a Ef_List.
+        See also Ef_ListViewExtended, which is generally used.
+    
+        Category : essential / rendering
+    
+        This class, as the Ef_Field class, is built in the idea it will be specialized.
+        See the Ef_ListViewExtended Definition, where the functions below are used.
+    
+            The method "render" of this class is called by the method "getRenderRows" of a
+             Ef_List instance, and it is controlled by the array of parameters sent to this method.
+            Example :
+            << 
+            $render = ($list->getRenderRows(array('variant'=>'simplehtmltable','rowtitle'=>'1')));
+            >>
+            will return the html code resulting from the render method of the Ef_ListView class,
+            with the variant simplehtmltable and the parameter rowtitle set to 1. 
+        
+        Variants for getRenderRows :
+            array('variant'=>'simplehtmltable','rowtitle'=>'1')
+            array('variant'=>'simplehtmllist')
+            array('variant'=>'simplehtmlform','coltitle'=>'1')
+             
+         
+        public function setLineSep($argbegin, $argend)
+            Defines the line separators.
+            Example 
+            << 
+                $listview->setLineSep('<tr>','</tr>');
+            >>            
+         
+        public function setColSep($argbegin, $argend)
+            Defines the column separators.
+         
+        public function setHeadColSep($argbegin, $argend)
+            Defines the column separators for the first line.
+             
+        public function setHeader($argheader)
+            Defines a header to return before the content of the list view.
+             
+        public function setFooter($argfooter)
+            Defines a footer to append after the content of the list view.
+             
+        public function setFieldEditSep($argbegin, $argend)
+            Defines the codes enclosing an edit field.
+            Example 
+            << 
+                $listview->setFieldEditsep('<div>','</div>');
+            >>                        
+         
+        public function setFieldErrorSep($argbegin, $argend) 
+            Defines the codes enclosing an edit field when it is in error state
+            When used in an Ef_List, this function allows to enclose in red error fields.
+            
+        public function setStateStyleInfo($state,$styleinfo)
+            Associates complementary style information for a given state of field.
+            Example : 
+            <<
+                $listview->setStateStyleInfo('hidden','style="visibility:hidden"');
+            >>
+        
+        public function  getStateStyleInfo($state) 
+            Gets complementary style information for a given state of field.
+        
+        public function setRenderFunc($renderfunc)
+            Specifies a rendering function.
+                  
+        public function setVariantHtml($argvariant, $parms)
+            Defines the different variants (list, form, templated list, etc) which will be in used /
+            for this listview.
+                     
+        public function setFieldDisplaySep($fieldname, $displayname, $hcolsep0, $hcolsep1, $colsep0, $colsep1)
+            Defines in one line, some specific column separators used by the listview for a field.
+                for these parameters, the value '-' means "don't change parameter"
+                $displayname is the name used to replace the usual display of $fieldname 
+                $hcolsep0 and $hcolsep1 are the separators enclosing the header of the column
+                $colsep0 and $colsep1 are the separators enclosing the value in the column
+
+            This function can be used indirectly through the parameters of the "renderRows" method of a F_ReadList / F_List.
+
+            Example 
+            <<
+                $displaysep['efit.inpage'] = array('-', '-', '-', '<td>', '</td>'); 
+                $displaysep['efit.date'] = array('', '', '', '<td> '.Ef_Lang::get('efit.date').' </td><td> ', '-');
+
+                $render = ($list->getRenderRows(array('variant'=>'simplehtmlform','coltitle'=>'1', 'displaysep'=>$displaysep)));
+            >>
+            In this example, for the field efit.inpage, display, hcolsep0, hcolsep1 are not changed,
+                colsep0 and colsep1 are set to the pair <td> </td>.
+                
+            For the field efit.date, display, hcolsep0, hcolsep1 are set to empty,
+                colsep0 is set to the value "<td>Date </td><td>", and colsep1 is not changed.
+            
+            
+        public function renderField ($flist, $field, $fieldvalue='', $irow=0, $fieldvalues = array())
+            This will return the rendering of the value $fieldvalue for a given field $field, /
+            a given F_ReadList or F_List, $flist, a given row $irow, according that the values of the row /
+            are those readable in $fieldvalues.  
+                  
+        public function render($flist, $parms=array())        
+            This will return the rendering of a given F_ReadList or F_List, $flist, and the parameters $parm.
+        
+
+Ef_ListViewExtended
+
+    
+    This class is an extension of Ef_ListView 
+        This class is considered as an extension, stored in the file F_FieldExtended.php
+    
+        Category : essential / rendering
+    
+            To use it as a replacement for Ef_ListView, we have to set a configuration variable :
+            Ef_Config::set('listview', 'Ef_ListViewExtended');
+
+        Ef_ListViewExtended has several features
+        [
+            -   rendering is specialized and uses bootstrap elements
+            
+            -   a specific method to render a list through template ('variant' = 'templatedlist')
+                public function renderThroughTemplate (&$F_List, $parms=array()) 
+            
+            -   a specific method to render a list through template or sequence ('variant' = 'templatedlist')   /
+                To be documented
+                public function renderTemplateOrSequence (&$f_list, $parms=array())
+        ]  
+
+        Variants for getRenderRows :
+            array('variant'=>'simplehtmltable','rowtitle'=>'1')
+            array('variant'=>'simplehtmllist')
+            array('variant'=>'simplehtmlform','coltitle'=>'1')
+            array('variant'=>'templatedlist','templatefile'=>$templatedfile)
+            array('variant'=>'templatedlistadvanced','templatefield'=>'template','sequencefield'=>'sequence')             
+         
+
+Ef_Log
+
+    Logs some messages
+    
+        Category : essential / configuration
+
+        public static function Ef_Log::conditionLog($myvar, $myvarname='', $keyword, $keywordfile)
+            If the config value for $keyword is "do", then write the value of $myvar with the title
+            $myvarname, in the file whose name is the config value for $keywordfile.
+        
+            This allows to write a custom errorLog function, Example :
+            <<
+                // write this in the config file
+                Ef_Config::set('f_log_errorlog',$logdebugdir.'/log_errors.txt');
+                Ef_Config::set('errorlog','do'); 
+
+                function errorLog($var, $msg) 
+                {
+                    Ef_Log::conditionLog($var, $msg,'errorlog','f_log_errorlog');
+                }                        
+            >>    
+            
+        public static function Ef_Log::echoTitle ($title, $style='h4', $withhr=true) 
+            Echoes $title as a title of style $style, preceded by <hr> if $withhr is true.
+                
+        public static function Ef_Log::htmlDump($myvar, $myvarname='', $height="20em")
+            Echoes a htmlDump of a variable $myvar with title $myvarname, in a block 
+            of height $height.
+         
+        public static function Ef_Log::log ($myvar, $myvarname)
+            Logs the variable $myvar with the title $myvarname in the log file of the application, / 
+            if logging is set on :
+            [
+                - Ef_Config::get('f_log_debug') must be true, 
+                - Ef_Config::get('f_log_debugfile') must be set to a writable file.
+			]
+
+Ef_Page
+
+    Display web pages
+        Ef_Page is a template engine.
+    
+        Category : essential / rendering
+
+        Constructor
+        new Ef_Page()
+
+        public function addText($text) 
+            Appends a given text inside the page.
+            
+        public function addTemplate($filepath)
+            Appends the content of a given template file inside the page.
+            If Ef_Config::get('f_template_path') is set, it will be prepended to the $filepath.
+            The template is read through Ef_Page::getTemplateContent function (which may be specialized).
+            
+        public function replaceVar($varname, $value)
+            Replaces a variable in the template with a given value.
+            Variables are enclosed with percent sign
+            Example
+            <<
+                $tmppage = new Ef_Page();                
+                $tmppage->addTemplate("tpl_fullcol.html");
+                $tmppage->replaceVar ('%coltitle%', (Ef_Lang::get('Updating carriers')));
+                echo $tmppage->render();
+            >>
+             
+        public function replaceVarNext($varname, $value, $append="\n" )
+            Replaces a variable in the template with a given value,
+            and appends variable name at end of content to allow a new replaceVar / replaceVarNext.
+            The value $append is used to enclose the variable name.
+               
+                              
+        public function clearContent()
+            Clears the content of the page.
+             
+        public function getContent()
+            Gets the content of the page, after using replaceVar / replaceVarNext.
+            
+        public function render($clear=true) 
+            Echoes the content of the page, and clears its content if $clear is set to true.
+
+        public static function Ef_Page::getTemplateContent($filepath)
+            This function is the standard way to read a template stored in $filepath.
+            This function may be specialised, by defining a replacement function and specify it /
+                with F_Config::set('readtemplatefunc', $funcname)
+            The utility to specialize this function is to allow doing something systematic after reading /
+                the template.  
+            
+            Example
+            <<  
+            // in configuration file
+            Ef_Config::set('readtemplatefunc', 'gzReadTemplate')
+            // in helper render file
+            function gzReadTemplate($filepath) 
+            {
+                $templatecontent = file_get_contents($filepath);
+            
+                $designrelpath = Ef_Config::get('f_design_relpath');        
+                $baserelpath = Ef_Config::get('f_base_relpath');                
+                $newcontent = str_replace('%designrelpath%', $designrelpath, $templatecontent);
+                $newcontent = str_replace('%baserelpath%', $baserelpath, $newcontent);    
+                return $newcontent;     
+            }
+            >>
+                
+             
+             
+             
+                                            
+Ef_PagePart
+        
+    Ef_PagePart is a controller for the part of a page         
+    
+        Category : essential / code organization    
+        
+        public function doRun(&$page=null)
+
+Ef_ReadList
+
+    This class allows to interact with data from database ; 
+        [
+        - it is the ancester of Ef_List.
+        - while Ef_List allows to update the data, Ef_ReadList is a read-only component
+        ]
+                 
+               
+        Category : essential / data
+    
+        Constructor
+            new Ef_ReadList($listcode, $listtemplate, $dbid='def')
+            where $listcode is an alphanumeric code for the list
+              and $listtemplate is a template for select sql query
+                  Example
+                  <<
+                  "select %fieldlist% from efitem efit %where% %orderby% "
+                  >>
+                  
+              and $dibd is the id of the database
+
+        public function buildSelectReq()
+            Builds the structure of the Ef_ReadList or Ef_Lsit, using all available fields
+            Example : 
+            <<
+            $list = new F_List('SimpleList', "select %fieldlist% from slitem slit    %where% %orderby% ",'simple');
+            $list->buildSelectReq();
+            >>                     
+
+        public function buildFromFieldArray($fieldarray)
+            Build the structure of the Ef_ReadList / Ef_List , using $fieldarray as an array of fields            
+            Example : 
+            <<
+                $vbasktotal = new Ef_SessionList('vbasktotal');
+                $vbasktotal->buildFromFieldArray(array('bskt.totwotax','bskt.tottax','bskt.totwithtax'));
+                $vbasktotal->setAllFieldState('read');
+            >>
+
+
+        public function getChangedArray() 
+            This function is defined for compatibility with Ef_List.
+            It returns an empty array.
+            
+        public function getChangeStateFunction() 
+            This function is defined for compatibility with Ef_List.
+            It returns a null value.
+
+        public function getCode()
+            Returns the alphanumeric code associated with the Ef_ReadList / Ef_List.
+            
+             
+        public function getFieldArray() 
+            Returns the array of field names of the Ef_ReadList / Ef_List. 
+        
+        public function getFieldStateArray() 
+            Returns the array of field states of the Ef_ReadList / Ef_List.
+            This is an array indexed by the field names of the list, and whose values /
+            are the matching field states :
+            [
+                - edit : field is editable
+                - disabled : field is in its edit form, but disabled (can't update)
+                - readonly : field is in its edit form, but readonly (can't update) /
+                    the difference between disabled and readonly is introduced by html                 
+                - hidden : field is in its edit form, but not visible
+                - none : field is not visible
+                - view : the field is presented to be read, not in is edit form ; this is the default state 
+            ]   
+
+        public function setWhere($argwhere) 
+             Defines the where condition of the select query.
+             Example
+             << 
+                $list->setWhere("where ca_datdel is null");
+             >>
+
+        public function getWhere()
+            Returns the where condition of the select query.
+
+        public function setFieldStateArray($fieldstatearray) 
+            Defines the field state array.
+            See getFieldStateArray.
+        
+        public function getListedArray() 
+            Gets the array of listed values.
+            
+        public function setFieldList($argfieldlist)
+            
+        public function setOrderBy($argorderby) 
+            Defines the "order by" clause of the list.
+            Example :
+            <<
+                $list->setOrderBy('order by gzug.ugid desc');
+            >>       
+               
+        public function getOrderBy()
+            Returns the "order by" clause of the list.
+             
+        public function getSqlQuery()
+            Returns the text of the sql select query of the list.
+             
+        public function setFieldState($argfieldname, $argstate)
+            Sets the state of a given field
+            Example :
+            <<
+                $list->setFieldState('gzol.olid', 'hidden');
+            >> 
+            
+        public function getFieldState($argfieldname)
+            Returns the state of a given field
+             
+        public function setAllFieldState($argstate)
+            Sets all field to an identical state.
+
+        public function insertVirtualFieldAtEnd($argfieldname)  
+            Inserts a virtual field at the end of the fields of the list. 
+            A virtual field is a field whose value is not stored in a database table.
+            It is defined as belonging to the 'virtual' table.
+            Example : 
+            <<
+                $list->insertVirtualFieldAtEnd('virtual.btn_delButton');
+            >>
+
+             
+        public function insertVirtualFieldAfter($argfieldname, $argfieldaftername = '')
+            Inserts a virtual field after a given field of the list.
+                     
+        public function countRows($parms=array())
+            Executes the select request and returns the number of returning rows.
+            
+        public function getRenderRows($parms=array()) 
+            Calls the Ef_ListView associated to the list and return the rendering according
+            to parameters.
+            Example : also see Ef_ListView / Ef_ListViewExtended 
+            <<
+                $render = ($list->getRenderRows(array('variant'=>'simplehtmlform','coltitle'=>'1', 'displaysep'=>$displaysep))); 
+                $render = ($list->getRenderRows(array('variant'=>'simplehtmltable','rowtitle'=>'1')));                                
+            >>
+        
+        public function extractListedRow($irow) 
+            Returns a row from a given listed result, without any virtual fields.
+            
+        public function extractCompletedRow($irow)    
+            Returns a row from a given listed result, with all added virtual fields.
+             
+        public function extractCompletedFieldArray() 
+            Returns the array of field names belonging to the list, completed with all added virtual fields. 
+    
+Ef_Route
+
+    This class allows long or user-friendly URLs ; 
+        it transcripts the name of a script into a string.
+            
+        Category : essential / rendering
+    
+        To allow this class to work, a .htaccess with FallbackResource defined must be placed in the site root.
+        The script defined as FallbackResource          
+
+        Constructor        
+        new Ef_Route($argfile, $argurl)
+            Defines a route : to access the script $argfile, the URL path from the site root /
+            will be $argurl. 
+        
+        public static Ef_Route::getScriptPathFromUrl($argurl)
+            Returns the script associated to the url.
+            If not found, will return the last part of the URL $argurl.
+            Example
+            <<
+                Ef_Route::getScriptPathFromUrl('http://localhost/www/simple/test-route');                
+                   // may return 'SyTestRoute.php' if the route has been defined
+                Ef_Route::getScriptPathFromUrl('http://localhost/www/simple/unknown-route');
+                   // may return 'unknown-route'
+            >>
+             
+        
+        public static Ef_Route::getUrlFromFile($filename)
+            Returns the url associated to a given file
+         
+        public static Ef_Route::getFileFromUrl($urlsuffix)
+            Returns the filename associated to a given url.
+         
+        public static Ef_Route::setGetParamsFromUrl($url) 
+            Assigns $_GET parameters from a given url.
+
+Ef_Session
+
+    Ef_Session is a mechanism to store and retrieve values associated to the current user.    
+        It is a wrapper for the php session mechanism, completed by some functions / 
+         to store error messages in session.
+
+        Category : essential / configuration
+    
+        public static function Ef_Session::start($params = array())
+            starts a session
+        
+            $params may contain the following key / values
+            
+                'sessname'              : to define the name of the session ; default is 'f_sess'                    
+                'sesslifetime'          : to define the session.gc_maxlifetime parameter ; default is 1440
+                'sessioncacheexpire'    : to define the session.cache_expire parameter ; default is 180
+                
+            if $_GET['sessinit'] is set to the string 'true', then the session will be reset.
+            @todo : allow 'sessinit' in $params        
+        
+        
+        public static function Ef_Session::delete()    
+            deletes the content of the current session
+            @note : tested only on php 5.3 
+    
+        public static function Ef_Session::getSessionId()
+            returns the session id of the current session
+    
+        public static function Ef_Session::setVal($key, $value)    
+            associates the value $value to the key $key in the current session
+    
+        public static function Ef_Session::getVal($key)    
+            returns the value associated to the key $key in the current session
+    
+        public static function Ef_Session::delKey($key)
+            unsets and deletes the key / value associated to $key in the current session
+    
+        public static function Ef_Session::isStarted()) 
+            returns true if a session is started, else returns false  
+        
+        public static function Ef_Session::appendMessage($context, $msg, $separator='&lt;br/&gt;')
+            appends the message $msg and the separator $separator to the context $context
+             $msg is simply concatenated to messages text already appended
+            this is used to store one or several error / information messages associated to 
+             a given context (maybe a given page)
+        
+        public static function Ef_Session::clearMessages($context)
+            clears the messages of a given context $context
+             
+        public static function Ef_Session::getMessages($context)
+            get the message text of all messages associated to a given context
+            
+
+Ef_SessionList
+
+    Ef_SessionList is an extension of Ef_List working with session data.
+    
+        Category : essential / data
+
+        public function initListedContent() 
+            Ensures that the row 0 of the session list is initialized. 
+     
+        public function keepPostInListed($field) 
+            Keep all post values in session for a field belonging to the session list.
+            
+        public function resetListedContentRow($irow)
+            Reinitializes the listed content for a given row.
+
+        public function setListedContent($irow, $arrayVal) 
+            Sets the listed content for a given row, from an array of values $arrayVal.
+            The values must be in the same order as the field array of the Ef_SessionList.
+                
+
+Ef_SqlReq
+
+    This class is the Sql query. It is built with PDO  (PHP Data Objects)
+        Notice : this class is also the ancestor of Ef_ReadList.
+
+        Category : essential / data    
+
+        Constructor
+            new Ef_SqlReq($argsqlquery, $argdbid='def')
+            where $argsqlquery is the text of the query
+              and $argdbid is the internal alias of the database
+        
+            Example
+                $insertreq = new Ef_SqlReq ("
+                   insert into slitem (itid, it_title) \n  values ($newlineid, '' ) \n 
+                ",'simple');
+                $insertreq->execute();
+        
+        public function prepare()
+            prepare the query, as a wrapper to the PDO
+            this method is implicitly called by getRows, getRow, getValue and execute methods
+    
+        public function execute() 
+            prepares, executes the query without returning anything.
+             
+        public function getRows($resultmode=PDO::FETCH_ASSOC)
+            prepares, executes the query and returns its result as an array of rows
+            $resultmode defines the form of the resulting rows
+             in the default mode, each row is an array of colname=>colvalue
+              
+        public function getRow($resultmode=PDO::FETCH_ASSOC) 
+            prepares, executes the query and returns the result as a row
+            (or the first row resulting from the execution)
+            $resultmode defines the form of the resulting row
+             in the default mode, it will be an array of colname=>colvalue
+    
+        public function getValue()
+            prepares, executes the query and returns the resulting value.
+             
+    
+Ef_SqlTable
+
+        
+        Constructor
+    
+        new Ef_SqlTable($argname, $argalias, $argdbid='def')
+            where $argname is the name of the sql table 
+              and $argalias is the alias of the sql table
+                    (it will be the prefix of all fields defined in the table)
+              and $argdbid is the internal alias of the database (optional, default value 'def')
+        
+            Example
+                $slitem = new Ef_SqlTable('slitem','slit','simple');
+
+        Conventions :  
+            Tables created by Entryfield may usually be named this way :
+                $appcode$tblname
+                    where $appcode is the short code for the application
+                    and $tblname identify the data, and is in singular form
+                    Example application gz, table country -> gzcountry
+            Aliases are usually build this way
+                $appcode$tblalias
+                    Example application gz, table country, alias ct (abbreviation) -> gzct
+            Usually tables have a single integer identifier, named this way
+                $tblaliasid
+                    Example table country, alias ct -> identifier ctid
+            Example to sum up : definition of a table of countries
+            <<
+                $gzcountry = new Ef_SqlTable('gzcountry','gzct','bootik');
+                $gzct_id = Ef_Field::construct('gzct.ctid', array('type'=>'int', 'keypos'=>'0'));
+                $gzct_code = Ef_Field::construct('gzct.ct_code', array('type'=>'string','len'=>'2'));
+                $gzct_name = Ef_Field::construct('gzct.ct_name', array('type'=>'string','len'=>'30','maxlen'=>'80')); 
+                $gzcountry->buildFieldArray();
+            >>                        
+                            
+                                 
+        public function getName()
+            returns the name of the table
+            
+        public function getAlias()
+            returns the alias of the table
+             
+        public function buildFieldArray()
+            finishes the definition of the table, once all fields have been added
+            See example above in Conventions 
+             
+        public function getFieldArray() 
+            returns the array of field names of the table
+    
+            
+        public function getFieldKeyArray()
+            returns the array of field names of the table, which belong to the key
+            see parameter keypos in Ef_Field::construct
+             
+        public function getFieldList() 
+            returns the field list of the table, which is a comma-separated string
+             lie for exammple 'slit.itid, slit.it_title, slit.it_text'
+             
+        public function getFieldArrayObj()
+            returns the array of fields of the table, as an array of Ef_Field instances
+             
+        public function getNewId($numId='')
+            For tables with only one integer identifier, return a new value for this /
+            identifier to prepare an insertion.
+            if set, the $numId parameter indicates the shortname of the field.
+            @note : also wrapped in static method Ef_TableUtil::getNewId   
+    
+Ef_TableUtil
+    
+    Utility class for sql tables
+
+        This class is considered as an extension and stored in F_FieldExtended.php.    
+
+        public static function Ef_TableUtil::getNewId($tablename)
+            For tables with only one integer identifier, return a new value for this /
+            identifier to prepare an insertion.
+            Wraps the function Ef_SqlTable::getNewId($numId);
+             
+        public static function Ef_TableUtil::getNumToInsertAfter($tablename, $where, $order, $numcol, $idcol, $id, $step=1000)
+            This function is used for tables ordered by a given column.
+            It intends to get the right value for the column to insert after a given item of the table.
+            To document
+                       
+        public static function Ef_TableUtil::pushDown($tablename, $where, $order, $numcol, $idcol, $id)
+            This function is used for tables ordered by a given column.
+            It intends to push down a given item of the table.
+            To document
+            
+        public static function Ef_TableUtil::pushUp($tablename, $where, $order, $numcol, $idcol, $id)
+            This function is used for tables ordered by a given column.
+            It intends to push up a given item of the table.
+            To document
+        
+        public static function Ef_TableUtil::reNumber($tablename, $where, $order, $numcol, $idcol, $step=1000)
+            This function is used for tables ordered by a given column.
+            It intends to renumber this column of a table.
+            To document
+        
+        public static function groupCopy($tablename, $condition, $numid, $changedfields)
+            Replicate a group of sql records, belonging to a table $tablename,  /            
+            getting new numeric ids for records and changing given fields.
+            [
+                -   $condition is the sql selection 
+                -   $numid is the name of a numeric unique  key
+        	    -   $changedfields is a table of name=>value identifying fields to change
+            ]
+            Example
+            <<
+                $condition = "where arf_refart = '$art_refart'";
+                $ligchangedfields = array ("arf_refart"=>"$newrefart");
+                EF_TableUtil::groupCopy('artfourn', $condition, "lineid", $ligchangedfields);
+            >>
+
+
+        public static function Ef_TableUtil::recordCopy($tablename, $idkeys, $changedfields)
+            Replicates a sql record of a table $table, while changing some data.
+	        [
+	           - $idkeys is a table of key=>value identifying the record to duplicate
+               - $changedfields is a table of name=>value identifying fields to change
+            ]
+            Example : 
+            <<
+                Ef_TableUtil::recordCopy('efitem', array('id'=>'28'), array('title'=>'test SA'));
+            >>
+	
+Ef_Util
+
+    Utility class
+        Category minor / configuration
+
+        public static function Ef_Util::getArrayValue($array,$key)
+            Looks in an key/value array to get the value associate to the key,
+            without complaint if the key does not exist.
+             
+            
+Ef_Version
+
+    Manages the version of Entryfield
+        Category minor / configuration
+        
+        public static function Ef_Version::numvers()
+            Returns the version number of EntryField. 
+
+Ef_VirtualTable   
+
+    Virtual table : a table whose data is kept in session.
+
+        Category essential / data
+    
+        Ef_VirtualTable is an extension of Ef_SqlTable.
+        It has methods to store and get data from session, in memory form or in edit form.
+    
+        public function getPostedFieldsInMemRow ($irow=0) 
+            Get the fields posted as a "memory row" of variables usable as names.
+            Returns an array of values.
+                 
+        public function setMemRowInSession ($memrow, $irow=0)
+            Transfer an array of values into session.
+             
+        public function getMemRowFromSession ($irow=0)
+            Retrieve the memory row of variables from the session
+            Returns an array of values.
+              
+        public function getEditRowFromSession ($irow=0,$withlabel=true)
+            Returns an "edit row", array of edit values of the table. 
+
+    
