@@ -1,0 +1,14 @@
+
+.amount {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.nofold {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.condensedhigh {
+    line-height: 50%;
+}
