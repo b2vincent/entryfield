@@ -3,7 +3,7 @@ Entryfield framework for PHP - build efficient lists
 
 This is a short-coded but rather complete framework to write Web applications with SQL. 
 
-*MySQL, SQLite, SQL Server are tested so far. Other RDBMS should work because the framework is based on PDO. *
+*MySQL, SQLite, SQL Server are tested so far. Other RDBMS should work because the framework is based on PDO.*
 
 You start by giving a prefix to your application, let say *App* ; and a directory, let say *appl*. 
 Our example app, a shared to-do-list, has the prefix Tdl and the directory tdlist.
