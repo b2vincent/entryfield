@@ -1,0 +1,2 @@
+
+... the place ef will log something via Ef_Log::log
