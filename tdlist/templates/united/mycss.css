@@ -1,0 +1,76 @@
+/* CSS Document */
+
+div#service {
+    margin : 1.3em;
+}
+
+#service i {
+    color: #dd4814;
+    font-size: 60px;
+    padding: 15px;
+}
+
+.fa-rotate-45 {
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.filler {
+  height: 8em;
+}
+
+.thisfooter {
+    position: fixed;
+    height: 1.4em;
+    font-size: 1em;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    vertical-align: middle;
+    background-color: #f5f5f5;
+    background-color: #FFF8DC; 
+}
+
+
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+    color: white;  /*Sets the text hover color on navbar*/
+    background-color: #8a83b5; /* gradient of dark slate blue */  
+}
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active >   
+ a:hover, .navbar-default .navbar-nav > .active > a:focus {
+    color: white; 
+    /*background-color: #030033; */
+    /* background-color: #dd4814; orange */
+    background-color: #483d8b; /* dark slate blue */
+}
+
+.navbar-default {
+    /* background-color: #0f006f;
+    background-color: #dd4814;
+    */
+    background-color: #483d8b; /* dark slate blue */
+    border-color: #030033;
+}
+
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+    color: #262626;
+    text-decoration: none;
+    background-color: #66CCFF;  /*change color of links in drop down here*/
+    background-color: #6960a0; /* gradient of dark slate blue */  
+}
+
+.nav > li > a:hover,
+.nav > li > a:focus {
+    text-decoration: none;
+    background-color: silver; /*Change rollover cell color here*/
+}
+
+
+.navbar-default .navbar-nav > li > a {
+   color: white; /*Change active text color here*/
+}
