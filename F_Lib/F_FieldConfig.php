@@ -230,6 +230,11 @@ class F_Session
         session_destroy();
     }
 
+    public static function clearContent()
+    {
+        session_unset();
+    }
+
     public static function checkStarted () 
     {
         if (Ef_Session::isStarted() == false) {
