@@ -1219,6 +1219,7 @@ class F_List extends F_ReadList
             // todo read field state
             // todo make a complete update statement
             $fieldname = $field->getName();
+            // Ef_Log::log($fieldname, "fieldname inside F_List $this->code");
             
             // 2015-09-21 : fieldstatearray must be 'edit' or 'hidden' or 'readonly'
             $fieldstate = $this->fieldstatearray[$fieldname];
