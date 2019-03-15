@@ -107,10 +107,10 @@ class F_Log
 		$F_Config = Ef_Config::getVars();
 		
 		extract($F_Config);
-		if (! $f_log_debug) {
+		if (!isset($f_log_debug) || !$f_log_debug) {  // 2019-03-13
 			return;
 		}
-        if (! $f_log_debugfile) {
+        if (!isset($f_log_debugfile) || !$f_log_debugfile) { 
             throw new Exception ("missing f_log_debugfile in Config");
         }
 		$fp = fopen($f_log_debugfile,"a+");
