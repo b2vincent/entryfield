@@ -473,7 +473,7 @@ class F_Lang {
             $iargs++;            
         }
         for ($i=1; $i<=10; $i++) {
-            if (strpos($res, "%$i") === 0) 
+            if (strpos($res, "%$i") === false) // changed  0 to false 2018-09-17 
                 break;
             $res = str_replace("%$i", '', $res);
         }
