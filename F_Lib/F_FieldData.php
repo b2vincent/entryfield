@@ -200,9 +200,39 @@ class F_SqlReq
                 call_user_func_array($logSqlFunction, array($this->sqlquery)); 
             } 
         } 
-        
-        
     }
+        
+    // Execute several insert statements        
+    public static function groupInsert($table, $fieldlist, $valuelists, $database='')
+    {
+        $dbtype = Ef_Config::get('f_db_dbtype');
+        
+        foreach ($valuelists as $valuelist) {
+        
+            $valuearray = explode (',', $valuelist);
+            $quotedvaluearray = array();
+            foreach ($valuearray as $value) {
+                // see function F_Field::memToSql (same)
+                $value = trim($value, ' \'');     
+                $value = stripslashes($value);               
+                    
+                if ($dbtype && $dbtype == 'sqlite') {
+            	     $quotedvaluearray[] = 	"'".sqlite_escape_string($value)."'";    
+                } else {		
+            	     $quotedvaluearray[] = "'".addslashes($value)."'";
+                }
+            }
+            $quotedvaluelist = implode(', ', $quotedvaluearray);
+                                               
+            $insertsqlreq = new Ef_SqlReq("
+                insert into $table ($fieldlist) values ($quotedvaluelist);
+            ",$database);
+            // Ef_Log::log($insertsqlreq, 'insertsqlreq');
+            
+            $insertsqlreq->execute();        
+    }
+    }
+
 }
 
 // Sql table
@@ -1192,6 +1222,7 @@ class F_List extends F_ReadList
             
             // 2015-09-21 : fieldstatearray must be 'edit' or 'hidden' or 'readonly'
             $fieldstate = $this->fieldstatearray[$fieldname];
+            // Ef_Log::log($fieldstate, "fieldstate for $fieldname");
             if ($fieldstate == 'edit' || $fieldstate == 'hidden' || $fieldstate == 'readonly') {
             
                 if ($field->getTbl() == $updatetableobj->getAlias()) {
@@ -1218,7 +1249,7 @@ class F_List extends F_ReadList
         }
         $updatesent .= "\n";
         
-        // Ef_Log::log ($updatesent, 'updatesent');
+        // Ef_Log::log ($updatesent, 'updatesent in buildUpdateReq'); 
         $this->updatequery = $updatesent;        
     }
     
