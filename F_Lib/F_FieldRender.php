@@ -497,6 +497,15 @@ class F_Page
         $this->truetext .= $readtext;
 	}
     
+    // 2018-07-04
+    public function addTemplateText($text)
+    {
+        $this->templatetext .= $text;
+        $this->truetext .= $text;    
+    }
+    
+    
+    
 	// Find a variable name or something else in the template
     public function findVar($varname, $offset=0) 
     {
