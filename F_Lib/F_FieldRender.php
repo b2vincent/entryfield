@@ -534,6 +534,28 @@ class F_Page
     {
         return $this->truetext;
     }
+    
+    // added 2018-07-03
+    public function translateContent()
+    {
+        $resarray = array();
+        $pattern = '/\%[a-zA-Z0-9-_\'\.\s]+\%/';
+
+        $nbresults = preg_match_all ($pattern, $this->truetext, $resarray);
+
+        if ($nbresults) {
+            $newtext = $this->truetext;
+            foreach ($resarray[0] as $index=>$keyword) {
+                // echo "$index : $keyword <br>\n";
+                if (Ef_Lang::get($keyword)) {
+                    $keyw = substr($keyword,1,-1);
+                    $newtext = str_replace($keyword, Ef_Lang::get($keyw), $newtext);
+                }                    
+            }    
+            $this->truetext = $newtext;    
+        }        
+    }
+    
 	
     // Define an iterative block
     // search begin and end of the block <!-- %bname:begin% --> <!-- %bname:end% -->

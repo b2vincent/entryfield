@@ -1,5 +1,5 @@
 <?php
-// Copyright Vincent Wartelle & Oklin.com 2016-2017
+// Copyright Vincent Wartelle & Oklin.com 2016-2019
 // EntryField framework - Open sourced under MIT license  
 
 // Field : mainly, column of a database table
@@ -73,6 +73,10 @@ class F_Field
         // find a translation associated to another alias of the table
         $tbl = $this->getTbl();
         $table = Ef_SqlTable::findByAlias($tbl);
+        // 2018-08-10 - avoid crash when using non translated fields in virtual tables
+        if (!$table) {
+            return $trname;
+        }
         $aliases = $table->getAliases();
         $shortname = $this->getShortName();
         foreach ($aliases as $alias) {
@@ -510,6 +514,22 @@ class F_FieldSelect extends F_Field {
 		$this->keyvals = $argkeyvals;	
 	}					
 
+    // Show the value ready for html format - 2018-06-29
+	public function memToViewHtml($value, $parms=array()) 
+    {
+        $keyvalue = htmlspecialchars($value);
+        $fieldvalue = '';
+        if (isset($this->keyvals[$keyvalue])) {
+            $fieldvalue = $this->keyvals[$keyvalue];                 
+        } 
+        if ($this->getAttribute('translate')=='do') {
+            return Ef_Lang::get($fieldvalue);
+        } else {
+            return $fieldvalue;
+        }    
+	}
+    
+
 	public function memToEditHtml($value, $parms=array()) 
     {
 	    // Ef_Log::htmlEcho($parms, 'parms dans memToEditHtml');
@@ -857,14 +877,16 @@ class F_FieldRowButton extends F_Field
 
     protected function addLabel($fieldname, $stringvalue)
     {
-        $fieldlabel = '&nbsp;';
-        $labeledstring = ("
-            <div class=\"form-group\">
-            <label for=\"$fieldname\" class=\"col-sm-2 control-label\">$fieldlabel</label>
-            $stringvalue        
-            </div>        
-        ");
-        return $labeledstring;
+        // Changed 2018-08-13
+        // $fieldlabel = '&nbsp;';                   
+        // $labeledstring = ("
+        //     <div class=\"form-group\">
+        //     <label for=\"$fieldname\" class=\"col-sm-2 control-label\">$fieldlabel</label>
+        //     $stringvalue        
+        //     </div>        
+        // ");
+        // return $labeledstring;
+        return $stringvalue;            
     }
     
     

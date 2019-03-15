@@ -1,5 +1,5 @@
 <?php
-// Copyright Vincent Wartelle & Oklin.com 2016-2017
+// Copyright Vincent Wartelle & Oklin.com 2016-2019
 // EntryField framework - Open sourced under MIT license  
 
 // This source file contains extensions to the base frameworks
@@ -639,6 +639,28 @@ class F_TableUtil
         $updreq = new Ef_SqlReq($updstr);  $updreq->execute();
         
     }    
+
+    // Gets alias from table name 
+    public static function getAliasFromTableName($table)
+    {
+        $tableid = Ef_SqlTable::findByName($table);
+        return $tableid->getAlias();
+    }
+    
+    // Gets id field from table name, if table structure is made as usual 
+    public static function getIdFieldFromTableName($table)
+    {
+        $tableid = Ef_SqlTable::findByName($table);
+        $fieldKeyArray = $tableid->getFieldKeyArray();
+        // Ef_Log::log($fieldKeyArray, 'fieldKeyArray');
+        if (count($fieldKeyArray) ==1) {
+            $fieldname = $fieldKeyArray[0];
+            $fieldobj = Ef_Field::findByName($fieldname);
+            return $fieldobj->getShortName();             
+        }
+        
+    }
+    
 }
 
 // A specific field : row button with a glyph icon

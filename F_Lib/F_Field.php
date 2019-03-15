@@ -1,5 +1,5 @@
 <?php
-// Copyright Vincent Wartelle & Oklin.com 2016-2017
+// Copyright Vincent Wartelle & Oklin.com 2016-2019
 // EntryField framework - Open sourced under MIT license  
 
 
