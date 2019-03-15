@@ -447,7 +447,8 @@ class F_Db
 }
 
 // Translation management
-class F_Lang {
+class F_Lang 
+{
 	
 	public static $translate;
 	
