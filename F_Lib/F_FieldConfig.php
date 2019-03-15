@@ -327,12 +327,12 @@ class F_Db
 
         $this->dbType = $f_db_dbtype;
         
-		// ability to use another database port
-		if (isset($f_db_port))
-			$dsn .= ";port=$f_db_port";
 		
 		if ($f_db_dbtype == 'mysql') {
 			$dsn = "mysql:dbname=$f_db_database;host=$f_db_host";
+    		// ability to use another database port
+    		if (isset($f_db_port))    // 2018-12-17
+    			$dsn .= ";port=$f_db_port";
             // Ef_Log::log($dsn,'dsn in sqlOpen for mysql');
     		try {
     			$this->pdolink = new PDO($dsn, $f_db_user, $f_db_pass);
@@ -370,6 +370,9 @@ class F_Db
             // $dsn="odbc:Driver={SQL Native Client};Server=$f_db_host;Database=$f_db_database;";
            // $dsn = "odbc:Driver={SQL Server Native Client 10.0};Server=$f_db_host;Database=$f_db_database;Uid=$f_db_user;Pwd=$f_db_pass;";
            $dsn = "odbc:Driver={SQL Server};Server=$f_db_host;Database=$f_db_database;Uid=$f_db_user;Pwd=$f_db_pass;";
+   		    if (isset($f_db_port))
+    			$dsn .= ";port=$f_db_port";
+            // Ef_Log::log($dsn,'dsn in sqlOpen for mysql');
             // Ef_Log::log($dsn,'dsn in sqlOpen for sqlserver');
     		try {
     			$this->pdolink = new PDO($dsn);
