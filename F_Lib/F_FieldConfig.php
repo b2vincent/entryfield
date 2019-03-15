@@ -15,7 +15,7 @@ class F_Version
     // see http://semver.org   - $major.$minor.$patch
     public static function numvers() 
     {      
-        return '1.23.1'; // 2017-11-02
+        return '1.24.1'; // 2019-13-03
     }   
         
 }
