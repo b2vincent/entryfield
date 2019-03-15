@@ -513,6 +513,16 @@ class F_Page
         // Ef_Log::log($this->truetext, 'truetext in replaceVar');			
 	}
 	
+    // Replace all remaining variables by blank - 2018-08-13
+    public function clearPercentVars()
+    {
+        $pattern = '/\%[a-zA-Z0-9-_\'\s]+\%/';
+
+        $replacedtext = preg_replace($pattern, '', $this->truetext);
+        
+        $this->truetext = $replacedtext;        
+    }
+	
 	// Replace variable name by value, and append variable name at end of content
     // this is used when we want to iterate the variable several times 
 	public function replaceVarNext($varname, $value, $append="\n" ) 
