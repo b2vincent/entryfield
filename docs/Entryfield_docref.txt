@@ -2,41 +2,8 @@
                     
                     Entryfield classes and functions  - Reference documentation 
 
-<hr>                    
-Ef_Application 
+<hr>
 
-    Defines some parameters of the application.
-        
-        Category : minor  / configuration    
-    
-        public static function Ef_Application::setDateFormat($dateformat); 
-            defines the date format 
-            $dateformat is a combination of letters like in php "date" command
-                Y-m-d   -   is the default value- sample : 2063-07-20
-                d/m/y   -   french date format - sample : 20/7/63
-        public static function Ef_Application::getDateFormat()
-            gets the date format
-        public static function Ef_Application::getDefaultCentury()
-            gets the default century - currently, the value is '20'.
-    
-Ef_Array
-
-    This is a simple wrap around a bidimensional php array.
-        
-        Category : minor / data   
-    
-        Constructor
-            new Ef_Array($phparray)
-            where $phparray is a bidimensional php array.
-            
-        Example :     
-        << 
-            $efarray = new Ef_Array(array('1'=>array('a','b','c'), '2'=>array('cc',6502,'ef')));
-        >>
-        
-        Ef_Array::renderHtml()    
-            returns the html content of the table 
-                
 Ef_Config
 
     Set configuration values and allows to get them back.
@@ -83,6 +50,7 @@ Ef_Control
                     }
                     return true;
                     }
+                }
             }
         >>
     
@@ -269,7 +237,7 @@ Ef_Field
             converts a memory value to an input html widget, with the value 
             Example : an amount 10000 may be converted to
                 << 
-                <input size="10" maxlength="10" name="gzt_test_name_id_12" value="€ 10,000.00">
+                &lt;input size="10" maxlength="10" name="gzt_test_name_id_12" value="€ 10,000.00"&gt;
                 >>
             Some information are provided by the field definition (for example length and maxlength).        
             $parms may contain the following key / values: 
@@ -349,7 +317,7 @@ Ef_FieldRowButton
 Ef_FieldRowIconButton               
 
     Defines a Button field, visible on each row of the Ef_List. Extension of Ef_FieldRowButton.
-        This class is defined in considered as an extension, defined in F_FieldExtended.php
+        This class is considered as an extension, defined in F_FieldExtended.php
 
         Constructor
             Inside the array of parameters of the Ef_Field, the 'glyphicon' has to be defined.
@@ -715,40 +683,6 @@ Ef_Page
         Constructor
         new Ef_Page()
 
-        public function addText($text) 
-            Appends a given text inside the page.
-            
-        public function addTemplate($filepath)
-            Appends the content of a given template file inside the page.
-            If Ef_Config::get('f_template_path') is set, it will be prepended to the $filepath.
-            The template is read through Ef_Page::getTemplateContent function (which may be specialized).
-            
-        public function replaceVar($varname, $value)
-            Replaces a variable in the template with a given value.
-            Variables are enclosed with percent sign
-            Example
-            <<
-                $tmppage = new Ef_Page();                
-                $tmppage->addTemplate("tpl_fullcol.html");
-                $tmppage->replaceVar ('%coltitle%', (Ef_Lang::get('Updating carriers')));
-                echo $tmppage->render();
-            >>
-             
-        public function replaceVarNext($varname, $value, $append="\n" )
-            Replaces a variable in the template with a given value,
-            and appends variable name at end of content to allow a new replaceVar / replaceVarNext.
-            The value $append is used to enclose the variable name.
-               
-                              
-        public function clearContent()
-            Clears the content of the page.
-             
-        public function getContent()
-            Gets the content of the page, after using replaceVar / replaceVarNext.
-            
-        public function render($clear=true) 
-            Echoes the content of the page, and clears its content if $clear is set to true.
-
         public static function Ef_Page::getTemplateContent($filepath)
             This function is the standard way to read a template stored in $filepath.
             This function may be specialised, by defining a replacement function and specify it /
@@ -773,8 +707,58 @@ Ef_Page
             }
             >>
                 
+
+        public function addText($text) 
+            Appends a given text inside the page.
+            
+        public function addTemplate($filepath)
+            Appends the content of a given template file inside the page.
+            If Ef_Config::get('f_template_path') is set, it will be prepended to the $filepath.
+            The template is read through Ef_Page::getTemplateContent function (which may be specialized).
+
+        public function addTemplateText($text)
+            Appends a given template text inside the current page
+            Example
+            <<
+                $tmppage->addTemplateText("This was done using %text% component");
+            >>                        
+                                          
+        public function clearContent()
+            Clears the content of the page.
+            
+        public function clearPercentVars()
+            Clears all remaining percent vars from the page.
+            This is used before displaying the page, to avoid %dummy% texts for optional variables.                         
              
+        public function getContent()
+            Gets the content of the page, after using replaceVar / replaceVarNext.
+            
+        public function render($clear=true) 
+            Echoes the content of the page, and clears its content if $clear is set to true.
              
+
+        public function replaceVar($varname, $value)
+            Replaces a variable in the template with a given value.
+            Variables are enclosed with percent sign
+            Example
+            <<
+                $tmppage = new Ef_Page();                
+                $tmppage->addTemplate("tpl_fullcol.html");
+                $tmppage->replaceVar ('%coltitle%', (Ef_Lang::get('Updating carriers')));
+                echo $tmppage->render();
+            >>
+             
+        public function replaceVarNext($varname, $value, $append="\n" )
+            Replaces a variable in the template with a given value,
+            and appends variable name at end of content to allow a new replaceVar / replaceVarNext.
+            The value $append is used to enclose the variable name.
+
+
+        public function translateContent()
+            Replace all variables with their translation 
+            It replaces all %varname%  by  Ef_Lang::get('varname').
+            
+                           
              
                                             
 Ef_PagePart
@@ -883,9 +867,6 @@ Ef_ReadList
         public function getOrderBy()
             Returns the "order by" clause of the list.
              
-        public function getSqlQuery()
-            Returns the text of the sql select query of the list.
-             
         public function setFieldState($argfieldname, $argstate)
             Sets the state of a given field
             Example :
@@ -948,7 +929,7 @@ Ef_Route
             Defines a route : to access the script $argfile, the URL path from the site root /
             will be $argurl. 
         
-        public static Ef_Route::getScriptPathFromUrl($argurl)
+        public static function Ef_Route::getScriptPathFromUrl($argurl)
             Returns the script associated to the url.
             If not found, will return the last part of the URL $argurl.
             Example
@@ -960,13 +941,13 @@ Ef_Route
             >>
              
         
-        public static Ef_Route::getUrlFromFile($filename)
+        public static function Ef_Route::getUrlFromFile($filename)
             Returns the url associated to a given file
          
-        public static Ef_Route::getFileFromUrl($urlsuffix)
+        public static function Ef_Route::getFileFromUrl($urlsuffix)
             Returns the filename associated to a given url.
          
-        public static Ef_Route::setGetParamsFromUrl($url) 
+        public static function Ef_Route::setGetParamsFromUrl($url) 
             Assigns $_GET parameters from a given url.
 
 Ef_Session
@@ -1045,7 +1026,7 @@ Ef_SessionList
 Ef_SqlReq
 
     This class is the Sql query. It is built with PDO  (PHP Data Objects)
-        Notice : this class is also the ancestor of Ef_ReadList.
+        Notice : this class is also the ancestor of Ef_ReadList and thus, of Ef_List
 
         Category : essential / data    
 
@@ -1055,11 +1036,25 @@ Ef_SqlReq
               and $argdbid is the internal alias of the database
         
             Example
+            <<
                 $insertreq = new Ef_SqlReq ("
                    insert into slitem (itid, it_title) \n  values ($newlineid, '' ) \n 
                 ",'simple');
                 $insertreq->execute();
+            >>
         
+        public static function Ef_SqlReq::groupInsert($table, $fieldlist, $valuelists, $database='')
+            insert several rows of data into a table
+            
+            Example        
+            <<        
+                Ef_SqlReq::groupInsert('aclang', 'lgid, lg_lang, lg_prid, lg_key, lg_value',
+                array(   "'10001', 'fr', '100', 'Project', 'Partenaire'"
+                        ,"'10002', 'fr', '200', 'Project', 'Affaire'"
+                    )
+                ,'simple');                        
+            >>
+
         public function prepare()
             prepare the query, as a wrapper to the PDO
             this method is implicitly called by getRows, getRow, getValue and execute methods
@@ -1080,6 +1075,12 @@ Ef_SqlReq
     
         public function getValue()
             prepares, executes the query and returns the resulting value.
+
+        public function getSqlQuery()
+            Returns the text of the sql select query of the list.
+             
+        public function setSqlQuery($query)
+            Allow to change the text of a sql query.
              
     
 Ef_SqlTable
@@ -1148,12 +1149,25 @@ Ef_SqlTable
             identifier to prepare an insertion.
             if set, the $numId parameter indicates the shortname of the field.
             @note : also wrapped in static method Ef_TableUtil::getNewId   
+                        
+        public static function cloneWithAlias($tablename, $newalias)
+            Duplicate a table definition with a given alias
+            This is used to update two or more instances of a table in the same web page :
+            different Ef_List will be built with different aliases.
+                 
     
 Ef_TableUtil
     
     Utility class for sql tables
 
         This class is considered as an extension and stored in F_FieldExtended.php.    
+
+        public static function Ef_TableUtil::getAliasFromTableName($tablename)
+            Gets the alias of the table from its name.
+
+        public static function Ef_TableUtil::getIdFieldFromTableName($tablename)
+            Gets the ID Field of the table from its name,
+            will work if there is only one key field in table, and this field is the first declared.
 
         public static function Ef_TableUtil::getNewId($tablename)
             For tables with only one integer identifier, return a new value for this /
@@ -1164,6 +1178,22 @@ Ef_TableUtil
             This function is used for tables ordered by a given column.
             It intends to get the right value for the column to insert after a given item of the table.
             To document
+
+        public static function Ef_TableUtil::groupCopy($tablename, $condition, $numid, $changedfields)
+            Replicate a group of sql records, belonging to a table $tablename,  /            
+            getting new numeric ids for records and changing given fields.
+            [
+                -   $condition is the sql selection 
+                -   $numid is the name of a numeric unique  key
+        	    -   $changedfields is a table of name=>value identifying fields to change
+            ]
+            Example
+            <<
+                $condition = "where arf_refart = '$art_refart'";
+                $ligchangedfields = array ("arf_refart"=>"$newrefart");
+                EF_TableUtil::groupCopy('artfourn', $condition, "lineid", $ligchangedfields);
+            >>
+
                        
         public static function Ef_TableUtil::pushDown($tablename, $where, $order, $numcol, $idcol, $id)
             This function is used for tables ordered by a given column.
@@ -1180,21 +1210,6 @@ Ef_TableUtil
             It intends to renumber this column of a table.
             To document
         
-        public static function groupCopy($tablename, $condition, $numid, $changedfields)
-            Replicate a group of sql records, belonging to a table $tablename,  /            
-            getting new numeric ids for records and changing given fields.
-            [
-                -   $condition is the sql selection 
-                -   $numid is the name of a numeric unique  key
-        	    -   $changedfields is a table of name=>value identifying fields to change
-            ]
-            Example
-            <<
-                $condition = "where arf_refart = '$art_refart'";
-                $ligchangedfields = array ("arf_refart"=>"$newrefart");
-                EF_TableUtil::groupCopy('artfourn', $condition, "lineid", $ligchangedfields);
-            >>
-
 
         public static function Ef_TableUtil::recordCopy($tablename, $idkeys, $changedfields)
             Replicates a sql record of a table $table, while changing some data.
