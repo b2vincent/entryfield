@@ -94,10 +94,10 @@ class Tdl_SimpleFieldsPart extends Ef_PagePart
     {
         $tmppage = new Ef_Page();
         // $tmppage->replaceVar('%pagetitle%',Ef_Lang::get("Simple fields"));
-        $tmppage->addTemplate("tpl_fullcol.html");
+        $tmppage->addTemplate("tpl_midsizecol.html");
         $tmppage->replaceVar ('%coltitle%', '<br>'.Ef_Lang::get("Please fill this form"));
         $tmppage->replaceVar ('%coltext%', " <p style=\"color:red\">%errormsgs%</p>
-        <p>".Ef_Lang::get('updating some simple fields')."</>");
+        <p>".Ef_Lang::get('Updating simple fields')."</>");
         if (isset($_SESSION['errormsgs']))  
             $tmppage->replaceVar('%errormsgs%',$_SESSION['errormsgs']);
         else 
@@ -154,12 +154,11 @@ class Tdl_SimpleFieldsPart extends Ef_PagePart
         ");
         */
                   
-        $tmppage->addTemplate("tpl_fullcol.html");
+        $tmppage->addTemplate("tpl_midsizecol.html");
         $tmppage->replaceVar ('%coltitle%', (Ef_Lang::get('Simple fields')));
         $tmppage->replaceVar ('%coltext%', $render.$dumppart.$submit.$return);  
         
         return $tmppage->getContent();
-        // $tmppage->addText('</form>');    
     }                       
 }
 	  

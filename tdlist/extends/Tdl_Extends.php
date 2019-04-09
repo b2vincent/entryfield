@@ -33,7 +33,7 @@ class Ef_FieldRadio extends F_FieldRadio {}
 class Ef_FieldButton extends F_FieldButton {}
 // class Ef_FieldRowButton extends F_FieldRowButton {}
 // class Ef_FieldInt extends F_FieldInt {}
-class Ef_FieldAmount extends F_FieldAmount {}
+// class Ef_FieldAmount extends F_FieldAmount {}
 // Extended
 class Ef_TableUtil extends F_TableUtil {}
 class Ef_FieldRowIconButton extends F_FieldRowIconButton {}

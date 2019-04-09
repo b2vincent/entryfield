@@ -53,17 +53,15 @@ class Tdl_ItemListPart extends Ef_PagePart
         			select %fieldlist% from tdlitem tdlit	%where% %orderby%
         		",'tdlist');
         $this->listreq->setUpdateTable('tdlitem');
-        // $this->listreq->setOrderBy('order by tdlit.itid desc');
         $this->listreq->setWhere("where tdlit.it_title != 'boundary'"); 
-        $this->listreq->setOrderBy("order by tdlit.itid desc");
+        // $this->listreq->setOrderBy('order by tdlit.itid desc');
+        $this->listreq->setOrderBy("order by tdlit.itid "); 
         $this->listreq->buildSelectReq();
         // F_Log::htmlDump($this->listreq->getSqlQuery(),'sqlQuery : ');
         $this->listreq->setAllFieldState('view');
-        $this->listreq->setFieldState('tdlit.it_projid','disabled');
-        $this->listreq->setFieldState('tdlit.it_statusid','disabled');
-        $this->listreq->setFieldState('tdlit.it_assignedtoid','disabled');
-        
-
+        // $this->listreq->setFieldState('tdlit.it_projid','disabled');
+        // $this->listreq->setFieldState('tdlit.it_statusid','disabled');
+        // $this->listreq->setFieldState('tdlit.it_assignedtoid','disabled');
         
         // row buttons : to update and delete item        
         $this->upditem = F_Field::construct('virtual.btn_upditem',
@@ -102,14 +100,6 @@ class Tdl_ItemListPart extends Ef_PagePart
             tdlGotoPage('tdl-item-update?itid='.$newlineid);            
     	}
          
-        /* to_delete_
-    	if (isset($_POST['but_update'])) {
-    		if ($this->listreq->processControl()) {	
-    			$this->listreq->processUpdate();
-    		}	        
-    	}
-        */
-        
     	$postedrow = $this->upditem->getPostedRow();
     	if ($postedrow !== false) {
             tdlGotoPage('tdl-item-update?itid='.$postedrow);    

@@ -59,7 +59,7 @@ function tdlClosePage(&$thispage, $withForm=true)
     
     $thispage->addTemplate("tpl_footer.html");
     $thispage->replaceVar ('%copyright%', '(c) V.Wartelle & Oklin.com ');
-    $thispage->replaceVar ('%version%', ' version 1.11 ');
+    $thispage->replaceVar ('%version%', ' version 1.31 ');
 	$thispage->replaceVar ('%servertime%', "- Server time : ".sprintf('%01.3f',$pagetime));  
     $thispage->replaceVar ('%hostname%'," -".php_uname("n"));
     $thispage->render();  

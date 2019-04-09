@@ -110,9 +110,6 @@ class Tdl_LoginPart extends Ef_PagePart
     
         $tmppage = new Ef_Page();
 
-        // display input form
-        // $tmppage->addText('<form role="form" method="POST">');
-        
         $render = '';
         $errorMessage = Ef_Session::getMessages('TdlLogin');
         // Ef_Log::log($errorMessage,'errorMessage');
@@ -125,21 +122,16 @@ class Tdl_LoginPart extends Ef_PagePart
         // $render .= ($this->listreq->getRenderRows(array('variant'=>'simplehtmlform','coltitle'=>'0')));
         $render .= ($this->listreq->getRenderRows(array('variant'=>'bootstrapform')));
         
-        $tmppage->addTemplate("tpl_halfcoltext.html");
-        $tmppage->replaceVar ('%coltitle%', (Ef_Lang::get('Connect')));
-        $tmppage->replaceVar ('%coltext%', $render); 
+        $tmppage->addTemplate("tpl_midsizecol.html");
+        $tmppage->replaceVar ('%coltitle%', '');  
+        $tmppage->replaceVar ('%coltext%', Ef_Lang::get('Logintext'));  
         
-        $tmppage->replaceVar ('%commentleft%', Ef_Lang::get('Logintext'));  
+        $tmppage->addTemplate("tpl_midsizecol.html");
 
-        $tmppage->replaceVar ('%commentright%', Ef_Lang::get('Cheattext'));  
-        
-        // $tmppage->addText('</form>');
-        
-        // $tmppage->addText('<h6>'.Ef_Lang::get('Initial users are entryfield, roger and anna, with password <i>abcdef</i>').'</h6>');
+        $tmppage->replaceVar ('%coltitle%', (Ef_Lang::get('Connect')));
+        $tmppage->replaceVar ('%coltext%', Ef_Lang::get('Cheattext') . $render); 
         
         return ($tmppage->getContent());    
         
     }                       
 }
-
-

@@ -78,7 +78,7 @@ Ef_Lang::set('virtual.btn_delitem','Delete item');
 $listreq = new Ef_List('SimpleList', " select %fieldlist% from tdlitem tdlit	%where% %orderby%",'tdlist');
 $listreq->setWhere("where tdlit.it_title != 'boundary'");
 $listreq->setUpdateTable('tdlitem');
-$listreq->setOrderBy('order by tdlit.itid desc');
+$listreq->setOrderBy('order by tdlit.itid ');
 $listreq->buildSelectReq();
 // want to see sql select query ? uncomment next line 
 // Ef_Log::htmlDump($listreq->getSqlQuery(),'sqlQuery : ');

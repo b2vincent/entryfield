@@ -22,7 +22,9 @@ function appGetSubTitle()
     $selectsqlreq = new F_SqlReq("
         select ap_subtitle from  tdlapplication 
     ",'tdlist');
-    return $selectsqlreq->getValue();    
+    $appsubtitle = $selectsqlreq->getValue();
+    Ef_Log::log($appsubtitle, 'appsubtitle'); 
+    return $appsubtitle;     
 }  
 
 function appGetAdminType() 

@@ -49,6 +49,7 @@ Ef_Lang::set('virtual.btn_disconnect_user','Disconnect');
 Ef_Lang::set('virtual.btn_add_item', 'Add item');
 Ef_Lang::set('virtual.btn_del_item', 'Del item');
 
+Ef_Lang::set('Updating simple fields', 'Demo : updating some fields kept in session');
 Ef_Lang::set('vsimp.name','Name'); 
 Ef_Lang::set('vsimp.street','Street'); 
 Ef_Lang::set('vsimp.visible','Visible'); 
@@ -56,12 +57,11 @@ Ef_Lang::set('vsimp.checked','Checked');
 Ef_Lang::set('vsimp.amount','Amount');
  
  
-Ef_Lang::set("Think, process, solve, Enjoy !", 
-    "Think, process, solve, Enjoy !
-    <i class=\"fa fa-lg fa-cloud text-muted\"></i>
-    <i class=\"fa fa-lg fa-gears text-muted\"></i>
-    <i class=\"fa fa-lg fa-check text-muted\"></i>
-    <i class=\"fa fa-lg fa-smile-o text-muted\"></i>");
+Ef_Lang::set("Manage, process, solve !", 
+    "Manage, process, solve ! &nbsp; &nbsp; 
+    <i class=\"fa fa-lg fa-list-ul text-muted\"> </i>  
+    <i class=\"fa fa-lg fa-gears text-muted\"> </i> 
+    <i class=\"fa fa-lg fa-check text-muted\"> </i> ");
 
 
 Ef_Lang::set('Logintext','
@@ -72,7 +72,7 @@ Ef_Lang::set('Logintext','
 
 Ef_Lang::set('Cheattext','
     <br>
-    <b>Initial users are entryfield, roger and anna, with password <i>abcdef</i></b>
+    <b>Initial users are Entryfield, Roger and Anna, with password <i>abc</i></b>
 '); 
 
 ?>

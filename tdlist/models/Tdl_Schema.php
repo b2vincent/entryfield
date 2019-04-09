@@ -28,6 +28,7 @@ if (!is_readable($dbfile)) {
     ",'tdlist');
     $insertsqlreq->execute();    
 
+    /*
     $insertsqlreq = new Ef_SqlReq("
         insert into tdlitem (itid, it_title, it_emergency, it_difficulty, it_projid, it_statusid,
                 it_datechanged, it_text)
@@ -36,7 +37,44 @@ if (!is_readable($dbfile)) {
                 about that, you know. 
                 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry''s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.')                 
     ",'tdlist');
+    */
+    
+    $itid = 10001;
+    
+    // projet, user, status, emergency, datechanged, title,text 
+    $itrecords =   array(
+                         array('100', '51', '210', '2', '2019-05-22', 'Set the date and prepare the guest list', 
+                                'The date must be determined according to the constraints of our busiest guests.'),
+                         array('100', '52', '200', '2', '2019-05-25', 'Choose the caterer', 
+                                'I let Anna choose the caterer. We would need someone who makes organic dishes and salads, since it is hot season, at a reasonable price.'),
+                         array('100', '52', '200', '2', '2019-07-22', 
+                                'Reception of the guests at the banquet', 'It must be really warm rather than grandiose, we are simple people.'),
+                         array('200', '51', '210', '2', '2019-05-22', 
+                                'Prospect boat rental ads', 'We are looking for a catamaran of less than fifteen meters, but with a large cabin.'),
+                         array('200', '52', '200', '2', '2019-05-31', 
+                                'Validate the choice of the boat', "It is basically about checking the plan and interior design, curtains, furniture and fittings."),
+                         array('200', '51', '200', '2', '2019-06-15', 
+                                'Confirm the reservation', 'You have to do it well in advance because these small models are always in high demand.')
+                    );
+
+    // projet, user, status, emergency, datechanged, title,text 
+                         
+    foreach ($itrecords as $itrecord) {
+        $projid = $itrecord[0];
+        $assignid = $itrecord[1];
+        $statusid = $itrecord[2];
+        $emergency = $itrecord[3];
+        $datechanged = $itrecord[4];
+        $title = addslashes($itrecord[5]);
+        $text = $itrecord[6];
+        $insertsqlreq = new Ef_SqlReq("
+            insert into tdlitem (itid, it_projid, it_assignedtoid, it_statusid, it_emergency, it_datechanged, it_title, it_text)  
+                values ('$itid', '$projid', '$assignid', '$statusid', '$emergency', '$datechanged', '$title', '$text')                 
+            ",'tdlist'
+        );    
     $insertsqlreq->execute();    
+        $itid += 1;        
+    }               
 
     Ef_Log::log($insertsqlreq, 'insertsqlreq');
     
@@ -53,15 +91,15 @@ if (!is_readable($dbfile)) {
     
     $insertsqlreq = new Ef_SqlReq("
         insert into tdluser (usid, us_login, us_password, us_isadmin) 
-         values (50,'entryfield','abcdef','1');",'tdlist');
+         values (50,'Entryfield','abc','1');",'tdlist');
     $insertsqlreq->execute();    
     $insertsqlreq = new Ef_SqlReq("
         insert into tdluser (usid, us_login, us_password, us_isadmin) 
-         values (51,'roger','abcdef','0');",'tdlist');
+         values (51,'Roger','abc','0');",'tdlist');
     $insertsqlreq->execute();    
     $insertsqlreq = new Ef_SqlReq("
         insert into tdluser (usid, us_login, us_password, us_isadmin) 
-         values (52,'anna','abcdef','0');",'tdlist');
+         values (52,'Anna','abc','0');",'tdlist');
     $insertsqlreq->execute();    
     
     // Actions
@@ -95,7 +133,7 @@ if (!is_readable($dbfile)) {
     ",'tdlist');
     $createsqlreq->execute();
     
-    $subtitle = Ef_Lang::get("Think, process, solve, Enjoy !");
+    $subtitle = Ef_Lang::get("Manage, process, solve !");
 
 	// $subtitle = addslashes($subtitle); not working
 		
@@ -115,7 +153,12 @@ if (!is_readable($dbfile)) {
     $createsqlreq->execute();
     
     $insertsqlreq = new Ef_SqlReq("
-        insert into tdlproject (prid, pr_title) values (100,'main');
+        insert into tdlproject (prid, pr_title) values (100,'Banquet');
+    ",'tdlist');
+    $insertsqlreq->execute();
+    
+    $insertsqlreq = new Ef_SqlReq("
+        insert into tdlproject (prid, pr_title) values (200,'Boat');
     ",'tdlist');
     $insertsqlreq->execute();
     

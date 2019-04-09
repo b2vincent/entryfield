@@ -22,7 +22,7 @@ if (count($_POST) > 0) return;
 $thispage = tdlNewPage(); 
 $thispage->replaceVar ('%pagetitle%', (Ef_Lang::get('Simple fields')));
 
-$thispage->addTemplate("tpl_fullcol.html");
+$thispage->addTemplate("tpl_midsizecol.html");
 
 $thispage->replaceVar ('%menu%', $myMenuContent);
 $thispage->replaceVar ('%coltitle%', (Ef_Lang::get('Simple fields')));

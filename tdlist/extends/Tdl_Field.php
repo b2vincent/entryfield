@@ -153,6 +153,24 @@ class Ef_FieldInt extends F_FieldInt
 }
 
 // Specialized to add bootstrap behaviour
+class Ef_FieldAmount extends F_FieldAmount 
+{
+
+    // Add placeholder and class, bootstrap way
+    public function memToEditHtml ($value, $parms=array())
+    {
+        $editField = parent::memToEditHtml($value, $parms);
+        $fieldlabel = Ef_Lang::get($this->getName()); 
+
+        $placeholdertext = "placeholder=\"$fieldlabel\"";        
+        $classtext = 'class="form-control"';         
+        
+        return (str_replace('data-dummy="dummy"', $placeholdertext.' '.$classtext, $editField));
+    
+    }
+}
+
+// Specialized to add bootstrap behaviour
 class Ef_FieldSelect extends F_FieldSelect 
 {
 
