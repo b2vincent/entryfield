@@ -279,6 +279,10 @@ Ef_Field
             From a field name and a line number, returns /
             the matching POST variable name of the field        
             
+        public static function Ef_Field::getSessValueFromNameIrow($argname, $irow=0)
+            From a fieldname and an option line number, returns /
+            the session value of this variable
+        
         public static function Ef_Field::getShortnameFromName($fieldname)
             Gets the short name of a field from its complete name.
              Example : "test_news-id" is the short name of "com.test_news-id"         

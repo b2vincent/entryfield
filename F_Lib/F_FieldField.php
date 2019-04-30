@@ -173,6 +173,15 @@ class F_Field
         $valuename = ('%'.$editname.'-value'.'%');    
         return $valuename;
     }
+
+    // Get session value from a variable and a row
+    public static function getSessValueFromNameIrow($argname, $irow=0)
+    {        
+        $sessionkey = Ef_Field::getIvarnameFromNameIrow($argname, $irow);
+        // Ef_Log::log($sessionkey, '$sessionkey  in F_FieldField!!');
+        $sessionval = (isset($_SESSION[$sessionkey])) ? $_SESSION[$sessionkey] : null;
+        return $sessionval;
+    }                  
         
     // Get short variable name : example "news_id" from "com.news_id"
     public static function getShortnameFromName($argname) 
