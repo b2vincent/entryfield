@@ -141,14 +141,13 @@ class F_Field
         return $postname;    
     }
 
-    // Get ivarname from name and irow : get "com_news_id" from "com.news_id"  
+    // Get ivarname from name  : get "com_news_id" from "com.news_id"  
     public static function getIvarnameFromName($argname) 
     {
         $postkeyname = str_replace('.','_',$argname);
         $postkeyname = str_replace('-','_',$postkeyname);         
         return $postkeyname;    
     }
-	
 	
 	// Get the row id from the post name (get 0 from "com-news_id-0" )
 	public static function getRowFromEditName($postkey) 
@@ -226,7 +225,7 @@ class F_Field
 	}
 
 	// Add label to a field value of a field
-    protected function addLabel($fieldname, $stringvalue)
+    public function addLabel($fieldname, $stringvalue)
     {
         $fieldlabel = Ef_Lang::get($this->getName());
         
@@ -256,7 +255,9 @@ class F_Field
         $linkcolsarr = explode(',',$linkcols);
         $linkargsarr = explode(',',$linkargs);
         $target = $linkpage;
-        $sep ='?'; $ilink = 0;        
+        // if target page already has get parameters, use ampersand
+        $sep = (strpos ($target, '?') === false) ? '?' : '&'; 
+        $ilink = 0;        
         foreach ($linkcolsarr as $linkcol) {
             // Ef_Log::log($linkcol,'linkcol in memToLinkHtml');
             $target .= $sep;
@@ -268,7 +269,13 @@ class F_Field
             $target .= Ef_Util::getArrayValue($parms['fieldvalues'], $fieldIvarname);            
             $ilink++;        
         }
-        return '<a href='.$target.'>'.$this->memToViewHtml($value, $parms).'</a>';
+
+        // with linkvalue we can replace the value by a symbol (for instance fa-magnify)
+        $linkvalue = Ef_Config::get($fieldname.'_linkvalue'); 
+        if (!$linkvalue) {
+            $linkvalue = $this->memToViewHtml($value, $parms);  
+        }
+        return '<a href='.$target.'>'.$linkvalue.'</a>';
     }  
 
     // Calls a given function to render the field
@@ -307,13 +314,15 @@ class F_Field
                 $size = "size=\"36\"";            
             }    
         } else {
+            $fieldlength = 20;  // 001740
             $size = "size=\"20\"";
         }
         $maxlength = $this->getAttribute('maxlen');
         if ($maxlength !== false) {
             $max = "maxlength=\"$maxlength\"";    
         } else {
-            $max = "maxlength=\"20\"";
+            // $max = "maxlength=\"20\"";  // 001740
+            $max = "maxlength=\"$fieldlength\"";
         }        
         if (isset($parms['disabled'])) {
             $disabled = 'disabled';
@@ -336,8 +345,12 @@ class F_Field
         } else {        
             $inputtype = "type=\"text\"";
         }
-		$inputfield = "<input $inputtype $readonly data-dummy=\"dummy\" $disabled $alignstyle name=\"$fieldname\" id=\"$fieldname\" $size value=\"$fieldvalue\" />";
+        // 2019-12-10 - 001680 - manage $max for maxlength
+		// $inputfield = "<input $inputtype $readonly data-dummy=\"dummy\" $disabled $alignstyle name=\"$fieldname\" id=\"$fieldname\" $size value=\"$fieldvalue\" />";
+        $inputfield = "<input $inputtype $readonly data-dummy=\"dummy\" $disabled $alignstyle name=\"$fieldname\" id=\"$fieldname\" $size $max value=\"$fieldvalue\" />";
         
+        // 2019-06-18 - 00600 - 'withlabel' : replace a view param by a field attribute - removed
+        // $labeledfield = ($this->getAttribute('withlabel')) ? $this->addLabel($fieldname,$inputfield) : $inputfield;
         $labeledfield = (isset($parms['withlabel'])) ? $this->addLabel($fieldname,$inputfield) : $inputfield;
         return $labeledfield;        
 	}
@@ -480,8 +493,17 @@ class F_Field
 
 }
 
+// Specialize Ef_Field to allow inherit from it - 2019-11-19 - 001630
+if (isset($basepath) && is_readable($basepath.'/extends/Ef_Field_Extends.php')) {
+    require_once($basepath.'/extends/Ef_Field_Extends.php');
+} else {
+    class Ef_Field extends F_Field {}
+}
+
+
 // String field
-class F_FieldString extends F_Field {
+class F_FieldString extends Ef_Field 
+{
 
 	protected $len;
 	protected $maxlen;
@@ -500,7 +522,8 @@ class F_FieldString extends F_Field {
 }
 
 // Select field 
-class F_FieldSelect extends F_Field {
+class F_FieldSelect extends Ef_Field 
+{
 
 	protected $len;
 	protected $keyvals;
@@ -579,14 +602,15 @@ class F_FieldSelect extends F_Field {
 }
 
 // Radiobutton field
-class F_FieldRadio extends F_FieldSelect {
+class F_FieldRadio extends F_FieldSelect 
+{
 
 	public function __construct($argname, $argattrib) 
     {
 		parent::__construct($argname,$argattrib);
 	}	
 
-    protected function addLabel($fieldname, $stringvalue)
+    public function addLabel($fieldname, $stringvalue)
     {
         return $stringvalue;
     }
@@ -608,8 +632,14 @@ class F_FieldRadio extends F_FieldSelect {
         }        
 
         $inputfield = "\n";
-        if (!isset($parms['inline'])) 
-            $inputfield .= "<br/>\n";                        
+        // 001760 - inline is an attribute 'valuesep', not an inaccessible parm
+        // if (!isset($parms['inline'])) 
+        //     $inputfield .= "<br/>\n";        
+        if ($this->getAttribute('valuesep')) { 
+            $inputfield .= $this->getAttribute('valuesep'); 
+        } else { 
+            $inputfield .= "<br/>\n";                    
+        }                
         foreach ($this->keyvals as $key=>$val) {
             $fieldnamekey = $fieldname.'-'.$key;
             $inputfield .= "<input $readonly $disabled data-dummy=\"dummy\" type=\"radio\" name=\"$fieldname\" id=\"$fieldnamekey\" ";
@@ -618,8 +648,14 @@ class F_FieldRadio extends F_FieldSelect {
                 $inputfield .= " checked";
             } 
             $inputfield .= "> ".$val;
-            if (!isset($parms['inline'])) 
-                $inputfield .= "<br/>\n";
+            // 001760 - inline is an attribute 'valuesep', not an inaccessible parm
+            // if (!isset($parms['inline'])) 
+            //     $inputfield .= "<br/>\n";        
+            if ($this->getAttribute('valuesep')) { 
+                $inputfield .= $this->getAttribute('valuesep'); 
+            } else { 
+                $inputfield .= "<br/>\n";        
+            }                
         }
         $inputfield .= "\n";
         $labeledfield = (isset($parms['withlabel'])) ? $this->addLabel($fieldname,$inputfield) : $inputfield;
@@ -632,14 +668,19 @@ class F_FieldRadio extends F_FieldSelect {
 
 
 // Date field
-class F_FieldDate extends F_Field 
+class F_FieldDate extends Ef_Field 
 {
 
     public function memToViewHtml ($value, $parms=array()) 
     {
         $dateformat = Ef_Application::getDateFormat();
-        $date = new DateTime($value);
-        return $date->format($dateformat);
+        
+        if ($value) {
+            $date = new DateTime($value);
+            return $date->format($dateformat);
+        } else {
+            return '';
+        }
     }
 	
 	public function memToEditHtml ($value, $parms=array()) 
@@ -771,22 +812,23 @@ class F_FieldText extends F_FieldString
 		}			
 	}
 	
-    public function memToReadonlyHtml($value, $parms=array()) 
-    {
-	    $fieldname = $this->getEditname ($parms);
-	    $fieldvalue = htmlspecialchars($value);
-		$colsize = '';
-	    if ($this->cols) {
-	    	$colsize = 'cols="'.$this->cols.'"';
-	    }
-	    $rowsize = '';
-	    if ($this->rows) {
-	    	$rowsize = 'rows="'.$this->rows.'"';
-	    }	    
-		$inputfield = "<textarea readonly $colsize $rowsize data-dummy=\"dummy\" name=\"$fieldname\" id=\"$fieldname\">$fieldvalue</textarea>";
-        $labeledfield = (isset($parms['withlabel'])) ? $this->addLabel($fieldname,$inputfield) : $inputfield;
-        return $labeledfield;
-    }
+    // 001790 - better managing readonly and disabled - 2020-04-28
+    // public function memToReadonlyHtml($value, $parms=array()) 
+    // {
+	//     $fieldname = $this->getEditname ($parms);
+	//     $fieldvalue = htmlspecialchars($value);
+	// 	$colsize = '';
+	//     if ($this->cols) {
+	//     	$colsize = 'cols="'.$this->cols.'"';
+	//     }
+	//     $rowsize = '';
+	//     if ($this->rows) {
+	//     	$rowsize = 'rows="'.$this->rows.'"';
+	//     }	    
+	// 	$inputfield = "<textarea readonly $colsize $rowsize data-dummy=\"dummy\" name=\"$fieldname\" id=\"$fieldname\">$fieldvalue</textarea>";
+    //     $labeledfield = (isset($parms['withlabel'])) ? $this->addLabel($fieldname,$inputfield) : $inputfield;
+    //     return $labeledfield;
+    // }
 
 	public function memToEditHtml($value, $parms=array()) 
     {
@@ -800,16 +842,25 @@ class F_FieldText extends F_FieldString
 	    if ($this->rows) {
 	    	$rowsize = 'rows="'.$this->rows.'"';
 	    }	    
-		$inputfield = "<textarea $colsize $rowsize data-dummy=\"dummy\" name=\"$fieldname\" id=\"$fieldname\">$fieldvalue</textarea>";
+        // 001790 - managing readonly and disabled - 2020-04-28
+        $disabled = '';
+        if (isset($parms['disabled']) && $parms['disabled']) {
+            $disabled = 'disabled';
+        }
+        $readonly = '';
+        if (isset($parms['readonly'])  && $parms['readonly']) {
+            $readonly = 'readonly';
+        }
+		$inputfield = "<textarea $readonly $disabled $colsize $rowsize data-dummy=\"dummy\" name=\"$fieldname\" id=\"$fieldname\">$fieldvalue</textarea>";
         $labeledfield = (isset($parms['withlabel'])) ? $this->addLabel($fieldname,$inputfield) : $inputfield;
         return $labeledfield;
 	}	
 }
 
  // Button field
- class F_FieldButton extends F_Field 
+ class F_FieldButton extends Ef_Field 
  {
-    protected function addLabel($fieldname, $stringvalue)
+    public function addLabel($fieldname, $stringvalue)
     {
         $fieldlabel = '&nbsp;';
         $labeledstring = ("
@@ -846,7 +897,7 @@ class F_FieldText extends F_FieldString
 }
 
 // Button field, contextual to a given row
-class F_FieldRowButton extends F_Field 
+class F_FieldRowButton extends Ef_Field 
 {
 	protected $buttonprefix;
     protected $buttontext;
@@ -872,7 +923,7 @@ class F_FieldRowButton extends F_Field
 	}	
 
     // access to the row identifier : default is the 'irow' = row number on screen
-    protected function getRowid ($parms=array()) 
+    public function getRowid ($parms=array()) 
     {
         extract ($parms['fieldvalues']);                	    
         if ($this->rowidname) {
@@ -884,7 +935,7 @@ class F_FieldRowButton extends F_Field
         }    
     }
 
-    protected function addLabel($fieldname, $stringvalue)
+    public function addLabel($fieldname, $stringvalue)
     {
         // Changed 2018-08-13
         // $fieldlabel = '&nbsp;';                   
@@ -932,7 +983,7 @@ class F_FieldRowButton extends F_Field
     {
 		return $this->memToViewHtml($value, $parms);
 	} 
-	
+                                     	
 	public function getPostedRow () 
     {
 		$postedkeys = array_keys($_POST);
@@ -950,7 +1001,7 @@ class F_FieldRowButton extends F_Field
 }		
 
 // Integer field
-class F_FieldInt extends F_Field 
+class F_FieldInt extends Ef_Field 
 {
 	public function __construct($argname, $argattrib) 
     {
@@ -960,14 +1011,19 @@ class F_FieldInt extends F_Field
 	}
 	public function memToEditHtml($value, $parms=array()) 
     {
-        $intparms = array('aligninput'=>'right'); 
-        $newparms = array_merge($parms, $intparms);        
-        return parent::memToEditHtml($value, array_merge($parms, $intparms));
+        // 001670 - 2019-11-29 - some need for left aligned descendants of F_FieldInt                      
+        // $intparms = array('aligninput'=>'right'); 
+        // $newparms = array_merge($parms, $intparms);        
+        // return parent::memToEditHtml($value, array_merge($parms, $intparms));
+        if (!isset($parms['aligninput'])) {
+            $parms['aligninput'] = 'right';
+        }
+        return parent::memToEditHtml($value, $parms);
     }
 }
 
 // Amount field (or other fixed decimals)
-class F_FieldAmount extends F_Field
+class F_FieldAmount extends Ef_Field
 {
 
 	protected $decpoint;

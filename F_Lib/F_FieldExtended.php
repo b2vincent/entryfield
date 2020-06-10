@@ -142,11 +142,16 @@ class F_ListViewExtended extends F_ListView
                 $shortname = $rowshortnames[$icol];    
 
                 $field = Ef_Field::findByName ($fieldname);
+
+                // 2020-04-08 - Begin - if transient value is set, use it - 001770
+                //            this is to redisplay the field value in error
+                $ivarname = Ef_Field::getIvarnameFromName($fieldname);
+                if (Ef_Session::checkKey('Transient__'.$ivarname.'__'.$irow)) {
+                    $fieldvalue = Ef_Session::getVal('Transient__'.$ivarname.'__'.$irow); 
+                }
+                // 2020-04-08 - End - 001770
                 
                 if (is_object ($field)) {
-                    // TODO : replace viewvalue by edit/or/view according to state
-                    // $viewvalue =  $field->memToViewHtml ($fieldvalue,
-					//			array('irow'=>$irow,'fieldvalues'=>$fieldvalues));
                     $viewvalue = $this->renderField($F_List, $field, $fieldvalue, $irow, $fieldvalues);								
                 } else {
                     $viewvalue = $fieldvalue;	
@@ -360,7 +365,7 @@ class F_TableUtil
 		$sqlinsert .= ")\n";
 		$sqlinsert .= " values (\n";
 		// fieldvalues
-        $parms['dbtype'] = Ef_Config::get('f_db_dbtype');
+        $parms['dbtype'] = Ef_Config::get('f_db_dbtype', $dbid);
         $fieldpref = $tableobj->getAlias();
         		
         foreach ($resultrow as $fieldname => $fieldvalue) {

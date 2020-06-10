@@ -15,7 +15,8 @@ class F_Version
     // see http://semver.org   - $major.$minor.$patch
     public static function numvers() 
     {      
-        return '1.24.3'; // 2019-04-25
+        // return '1.33.0'; // 2020-03-26
+        return '2.12.0'; // 2020-04-28
     }   
         
 }
@@ -225,11 +226,11 @@ class F_Session
     }
     
     public static function delete() 
-    {
+    {                   
         session_regenerate_id(true);
         session_destroy();
     }
-
+    
     public static function clearContent()
     {
         session_unset();
@@ -329,7 +330,9 @@ class F_Db
         
 		
 		if ($f_db_dbtype == 'mysql') {
-			$dsn = "mysql:dbname=$f_db_database;host=$f_db_host";
+            // 2020-04-24 - set the charset
+			// $dsn = "mysql:dbname=$f_db_database;host=$f_db_host";
+            $dsn = "mysql:dbname=$f_db_database;host=$f_db_host;charset=utf8";
     		// ability to use another database port
     		if (isset($f_db_port))    // 2018-12-17
     			$dsn .= ";port=$f_db_port";
@@ -368,8 +371,8 @@ class F_Db
         
         if ($f_db_dbtype == 'sqlserver') {
             // $dsn="odbc:Driver={SQL Native Client};Server=$f_db_host;Database=$f_db_database;";
-           // $dsn = "odbc:Driver={SQL Server Native Client 10.0};Server=$f_db_host;Database=$f_db_database;Uid=$f_db_user;Pwd=$f_db_pass;";
-           $dsn = "odbc:Driver={SQL Server};Server=$f_db_host;Database=$f_db_database;Uid=$f_db_user;Pwd=$f_db_pass;";
+            // $dsn = "odbc:Driver={SQL Server Native Client 10.0};Server=$f_db_host;Database=$f_db_database;Uid=$f_db_user;Pwd=$f_db_pass;";
+            $dsn = "odbc:Driver={SQL Server};Server=$f_db_host;Database=$f_db_database;Uid=$f_db_user;Pwd=$f_db_pass;";
    		    if (isset($f_db_port))
     			$dsn .= ";port=$f_db_port";
             // Ef_Log::log($dsn,'dsn in sqlOpen for mysql');

@@ -12,11 +12,15 @@ class F_ListView
     // headcolsep are the separators for the head column
     // fieldeditsep are the separators for an edited field
     // fielderrorsep are the separators for a field in error    
+    // firstlinesep are the separators around the first line
+    // headrowcolsep are the separators for the head column if it exists inside the rows    
 
 	protected $variant;
 	protected $linesep = array();
+    protected $firstlinesep = array(); // 001690 - Allow first line separator
 	protected $colsep = array();
 	protected $headcolsep = array();
+    protected $headrowcolsep = array(); // 001710 - Allow different col separator inside row
 	protected $header = '';
 	protected $footer = '';
 	protected $fieldeditsep = array();
@@ -26,9 +30,15 @@ class F_ListView
     
     protected $fielddisplayname = array();
     protected $fieldheadcolsep = array();
+    protected $fieldheadrowcolsep = array(); // 001710 - Allow different col separator inside row 
     protected $fieldcolsep = array();
 
         
+    // 001690 - Allow first line separator        
+	public function setFirstLineSep($argbegin, $argend) 
+    {
+		$this->firstlinesep = array ($argbegin, $argend);	
+	}
 	public function setLineSep($argbegin, $argend) 
     {
 		$this->linesep = array ($argbegin, $argend);	
@@ -41,6 +51,11 @@ class F_ListView
     {
 		$this->headcolsep = array ($argbegin, $argend);	
 	}
+    // 001710 - Allow different col separator inside row
+    public function setHeadRowColSep($argbegin, $argend)
+    {
+        $this->headrowcolsep = array($argbegin, $argend);
+    }     
 	public function setHeader($argheader) 
     {
 	    $this->header = $argheader;
@@ -176,6 +191,18 @@ class F_ListView
             if (!isset($this->fieldheadcolsep[$fieldname][1])) {
                 $this->fieldheadcolsep[$fieldname][1] = $this->headcolsep[1];
             }
+            // 001710 - Allow different col separator inside row
+            //          Default value is head col separator 
+            if (count($this->headrowcolsep) == 0) {
+                $this->headrowcolsep = $this->headcolsep;
+            }
+            if (!isset($this->fieldheadrowcolsep[$fieldname][0])) {
+                $this->fieldheadrowcolsep[$fieldname][0] = $this->headrowcolsep[0];
+            }            
+            if (!isset($this->fieldheadrowcolsep[$fieldname][1])) {
+                $this->fieldheadrowcolsep[$fieldname][1] = $this->headrowcolsep[1];
+            }
+            // 001710 - End
             if (!isset($this->fieldcolsep[$fieldname][0])) {
                 $this->fieldcolsep[$fieldname][0] = $this->colsep[0];
             }
@@ -244,6 +271,8 @@ class F_ListView
     public function render($f_list, $parms=array()) 
     {
 
+        // Ef_Log::log($f_list, 'DEBUG $f_list in '.__FUNCTION__);
+
         if (array_key_exists ('variant', $parms)) 
             $this->setVariantHtml($parms['variant'], $parms);
         else
@@ -281,8 +310,16 @@ class F_ListView
         $renderresult = $this->header;
         $irow = 0;
     
+        // 001690 - Allow first line separator - default value to line separator
+        if (count($this->firstlinesep) == 0) {
+            $this->firstlinesep = $this->linesep;
+        }        
+        
+    
     	while (true) {
     		$resultrow = $f_list->extractCompletedRow($irow);	
+            
+            // Ef_Log::log($resultrow, "DEBUG resultrow for $irow in ".__FUNCTION__);
 
     		if ($resultrow === false )
      			break;
@@ -291,16 +328,25 @@ class F_ListView
            	// we save fieldstatearray and we restore when we have finished to process this row
             $changestatefunction = $f_list->getChangeStateFunction();
             if ($changestatefunction) {
-                $fieldstatearray = $f_list->getFieldStateArray(); // init to avoid taking from previous row                         
-                $fieldstatearray = call_user_func_array ($changestatefunction, array (&$f_list, $resultrow, $fieldstatearray));
+                $fieldstatearray = $f_list->getFieldStateArray(); // init to avoid taking from previous row
+                // 001810 - 2020-06-04 - Begin                         
+                // $fieldstatearray = call_user_func_array ($changestatefunction, array (&$f_list, $resultrow, $fieldstatearray));
+                $fieldstatearray = call_user_func_array ($changestatefunction, array (&$f_list, &$resultrow, $fieldstatearray));
+                // 001810 - 2020-06-04 - End                         
             }
             
-            $renderresult .= $this->linesep[0];             
-    		
     		$fieldvalues = $this->buildFieldValues ($fieldarray, $resultrow);
+
+            //  001690 - $renderresult .= $this->linesep[0];                                                                 
     		
             // Title row (in general, if display is a list)
             if (array_key_exists('rowtitle',$parms) && $parms['rowtitle'] == '1' && $irow == 0) {
+
+                // 001690 - Allow first line separator        
+                // $renderresult .= $this->linesep[0]; 
+                // $renderresult .= "<!-- begin of first line TEST -->\n";                                                                        
+                $renderresult .= $this->firstlinesep[0];     
+
                 $icol = 0;
                 foreach ($resultrow as $fieldvalue) {
 
@@ -317,9 +363,17 @@ class F_ListView
 					}
                     $icol++;
                 }
-                $renderresult .= $this->linesep[1];             
+                // 001690 - Allow first line separator        
+                // $renderresult .= $this->linesep[1];        
+                // $renderresult .= "<!-- end of first line TEST -->\n";                                                     
+                $renderresult .= $this->firstlinesep[1];                          
                 $renderresult .= $this->linesep[0];                                                     
-            }
+            } 
+            // 001720 - must have a line separator if no row title, you know - begin            
+            else {
+                $renderresult .= $this->linesep[0];                                                                 
+            } 
+            // 001720 - end            
     	
             $icol = 0;
             foreach ($resultrow as $fieldvalue) {
@@ -330,12 +384,18 @@ class F_ListView
                 if (array_key_exists('coltitle',$parms) && $parms['coltitle'] == '1') {
     				if ($fieldstatearray[$fieldname] != 'none') {
 	                    $field = Ef_Field::findByName ($fieldname);
-                        $headcol0 = $this->fieldheadcolsep[$fieldname][0];
+                        // 001710 - Allow different col separator inside row - begin 
+                        // $headcol0 = $this->fieldheadcolsep[$fieldname][0];
+                        $headcol0 = $this->fieldheadrowcolsep[$fieldname][0];
+                        // 001710 - end 
                         // apply style relative to state : example style="visibility:hidden" for state hidden                        
                         $headcol0 = str_replace('>',' '.$this->getStateStyleInfo($fieldstatearray[$fieldname]).'>', $headcol0);                         
                         $renderresult .= $headcol0;
                         $renderresult .= $this->fielddisplayname[$fieldname];
-                        $renderresult .= $this->fieldheadcolsep[$fieldname][1];
+                        // 001710 - Allow different col separator inside row - begin 
+                        // $renderresult .= $this->fieldheadcolsep[$fieldname][1];
+                        $renderresult .= $this->fieldheadrowcolsep[$fieldname][1];
+                        // 001710 - end 
     				}
                 }                
 
@@ -356,6 +416,12 @@ class F_ListView
 					$fieldvalue = $changedvalue; // TODO alert in red
 				} 
                 
+                // 2019-11-20 if transient value is set, use it
+                //            this is to redisplay the field value in error
+                $ivarname = Ef_Field::getIvarnameFromName($fieldname);
+                if (Ef_Session::checkKey('Transient__'.$ivarname.'__'.$irow)) {
+                    $fieldvalue = Ef_Session::getVal('Transient__'.$ivarname.'__'.$irow); 
+                }
                 
                 if (is_object ($field)) {
                     switch ($fieldstatearray[$fieldname]) {
@@ -521,7 +587,7 @@ class F_Page
         // Ef_Log::log($varname,"replaceVar was called to replace $varname");
         // Ef_Log::log($this->truetext, 'truetext in replaceVar');			
 	}
-	
+    
     // Replace all remaining variables by blank - 2018-08-13
     public function clearPercentVars()
     {
@@ -558,7 +624,7 @@ class F_Page
     public function translateContent()
     {
         $resarray = array();
-        $pattern = '/\%[a-zA-Z0-9-_\'\.\s]+\%/';
+        $pattern = '/\%[a-zA-Z0-9-_\'\.\s\?]+\%/';     // Added ? 2020-04-24
 
         $nbresults = preg_match_all ($pattern, $this->truetext, $resarray);
 
@@ -768,7 +834,9 @@ class F_Route
                 $key = reset($keyvaluearr);
                 $value = end($keyvaluearr);
                 if ($key != $keytodel) {
-                    $newurl .= $getparmsarray;
+                    // 2019-11-03 - ticket 001620
+                    // $newurl .= $getparmsarray;  
+                    $newurl .= $keyvalue;
                 }
             }        
         }        

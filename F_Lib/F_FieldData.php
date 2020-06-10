@@ -202,10 +202,10 @@ class F_SqlReq
         } 
     }
         
-    // Execute several insert statements        
-    public static function groupInsert($table, $fieldlist, $valuelists, $database='')
-    {
-        $dbtype = Ef_Config::get('f_db_dbtype');
+    // Execute several insert (or replace) statements         
+    public static function groupInsert($table, $fieldlist, $valuelists, $dbid, $verb)
+    {    
+        $dbtype = Ef_Config::get('f_db_dbtype', $dbid);
         
         foreach ($valuelists as $valuelist) {
         
@@ -225,13 +225,57 @@ class F_SqlReq
             $quotedvaluelist = implode(', ', $quotedvaluearray);
                                                
             $insertsqlreq = new Ef_SqlReq("
-                insert into $table ($fieldlist) values ($quotedvaluelist);
-            ",$database);
+                $verb into $table ($fieldlist) values ($quotedvaluelist);
+            ",$dbid);
             // Ef_Log::log($insertsqlreq, 'insertsqlreq');
             
             $insertsqlreq->execute();        
+        }
     }
+
+    // Execute several insert (or replace) statements - 2019-07-03
+    // Based on array of arrays        
+    public static function groupInsertArray($table, $fieldlist, $valuearrays, $dbid, $verb)
+    {
+        $dbtype = Ef_Config::get('f_db_dbtype', $dbid);
+        
+        foreach ($valuearrays as $valuearray) {
+        
+            $quotedvaluearray = array();
+            foreach ($valuearray as $value) {
+                // see function F_Field::memToSql (same)
+                $value = trim($value, ' \'');     
+                $value = stripslashes($value);               
+                    
+                if ($dbtype && $dbtype == 'sqlite') {
+            	     $quotedvaluearray[] = 	"'".sqlite_escape_string($value)."'";    
+                } else {		
+            	     $quotedvaluearray[] = "'".addslashes($value)."'";
+                }
+            }
+            $quotedvaluelist = implode(', ', $quotedvaluearray);
+                                               
+            $insertsqlreq = new Ef_SqlReq("
+                $verb into $table ($fieldlist) values ($quotedvaluelist);
+            ",$dbid);
+            // Ef_Log::log($insertsqlreq, 'insertsqlreq');
+            
+            $insertsqlreq->execute();        
+        }
     }
+
+    // 2019-07-03
+    public static function quoteString($string, $dbtype)
+    {
+        if ($dbtype && $dbtype == 'sqlite') {
+    	     $returnstring = 	"'".sqlite_escape_string($string)."'";    
+        } else {		
+    	     $returnstring = "'".addslashes($string)."'";
+        }
+        return $returnstring;        
+    }
+
+    
 
 }
 
@@ -266,7 +310,16 @@ class F_SqlTable
         $this->dbid = $argdbid;
         self::$tables[] = $this;          
     }
-    
+
+    public static function forgetTable($tablename)
+    {        
+        foreach (self::$tables as $itable=>$table) {
+            if ($table->name == $tablename) {
+                unset(self::$tables[$itable]);
+            }
+        }
+    }    
+        
     public function getName() 
     {
         return $this->name;
@@ -466,7 +519,32 @@ class F_SqlTable
         // Ef_SqlTable::tblAliasFinished($newalias);         
         // Ef_Log::log($newtableobj,'newtableobj at end of cloneWithAlias');
     }
-    
+
+    // Get the fields posted as a row of variables usable as names
+    // method originally in F_VirtualTable - 2020-03-26  
+    public function getPostedFieldsInMemRow ($irow=0, $tblalias='') 
+    {
+        if (count($_POST) > 0) {
+            $resultrow = array();
+            foreach ($this->getFieldArrayObj() as $field) {
+                $fieldname = $field->getName();
+                if ($tblalias) {
+                    $fieldname = $tblalias.'.'.$field->getShortName();
+                }                                 
+                $postnameN = $field->getPostnameFromNameIrow($fieldname, $irow);
+                $ivarnameN = $field->getIVarnameFromNameIrow($fieldname, $irow);
+                
+                if (array_key_exists($postnameN, $_POST)) {
+                    $postvalue = $_POST[$postnameN];
+                    $resultrow[$ivarnameN] = $field->postHtmlToMem($postvalue);
+                } else {
+                    $resultrow[$ivarnameN] = '';
+                }                   
+            }
+        }
+        // Ef_Log::log($resultrow, 'resultrow in getPostedFieldsInMemRow');
+        return $resultrow;
+    }    
         
 }
 
@@ -490,29 +568,40 @@ class F_VirtualTable extends F_SqlTable
             }                               
         }            
     } 
+    
+    // Reset session row : empty session values for a row
+    public function resetSessionRow($irow=0)
+    {
+        foreach ($this->getFieldArrayObj() as $field) {
+            $fieldname = $field->getName();
+            $ivarnameN = $field->getIVarnameFromNameIrow($fieldname, $irow);
+            $_SESSION[$ivarnameN] = '';
+        }
+    }
 
                                                     
     // Get the fields posted as a row of variables usable as names 
-    public function getPostedFieldsInMemRow ($irow=0) 
-    {
-        if (count($_POST) > 0) {
-            $resultrow = array();
-            foreach ($this->getFieldArrayObj() as $field) {
-                $fieldname = $field->getName();                                 
-                $postnameN = $field->getPostnameFromNameIrow($fieldname, $irow);
-                $ivarnameN = $field->getIVarnameFromNameIrow($fieldname, $irow);
-                
-                if (array_key_exists($postnameN, $_POST)) {
-                    $postvalue = $_POST[$postnameN];
-                    $resultrow[$ivarnameN] = $field->postHtmlToMem($postvalue);
-                } else {
-                    $resultrow[$ivarnameN] = '';
-                }                   
-            }
-        }
-        // Ef_Log::log($resultrow, 'resultrow in getPostedFieldsInMemRow');
-        return $resultrow;
-    }    
+    // moved to F_SqlTable - 2020-03-26 
+    // public function DEL_getPostedFieldsInMemRow ($irow=0) 
+    // {
+    //    if (count($_POST) > 0) {
+    //        $resultrow = array();
+    //        foreach ($this->getFieldArrayObj() as $field) {
+    //            $fieldname = $field->getName();                                 
+    //            $postnameN = $field->getPostnameFromNameIrow($fieldname, $irow);
+    //            $ivarnameN = $field->getIVarnameFromNameIrow($fieldname, $irow);
+    //            
+    //            if (array_key_exists($postnameN, $_POST)) {
+    //                $postvalue = $_POST[$postnameN];
+    //                $resultrow[$ivarnameN] = $field->postHtmlToMem($postvalue);
+    //            } else {
+    //                $resultrow[$ivarnameN] = '';
+    //            }                   
+    //        }
+    //   }
+    //    // Ef_Log::log($resultrow, 'resultrow in getPostedFieldsInMemRow');
+    //    return $resultrow;
+    // }    
 
     // Keep a memory row into session
     public function setMemRowInSession ($memrow, $irow=0) 
@@ -551,8 +640,9 @@ class F_VirtualTable extends F_SqlTable
         return $memrow;        
     }
     
-    // Restore and editable row from session 
-    public function getEditRowFromSession ($irow=0,$withlabel=true) 
+
+    // Restore an editable row from session - changed 2019-08-01
+    public function getEditRowFromSession ($irow=0, $withlabel=true, $fieldstate=array()) 
     {    
         $this->initSessionRow($irow);
         $memrow = array();
@@ -563,6 +653,10 @@ class F_VirtualTable extends F_SqlTable
                 $argtable = array('irow'=>$irow,'fieldvalues'=>array());
                 if ($withlabel)
                     $argtable['withlabel'] = 1; 
+                if (isset($fieldstate[$fieldname])) {
+                    $somestate = $fieldstate[$fieldname];
+                    $argtable[$somestate] = 1; 
+                }                    
                 if (array_key_exists($ivarnameN, $_SESSION)) {                
                     $memrow[$ivarnameN] = $field->memToEditHtml($_SESSION[$ivarnameN],$argtable);
                 } else {
@@ -572,7 +666,6 @@ class F_VirtualTable extends F_SqlTable
         }
         return $memrow;        
     }
-    //
             
 }
 
@@ -712,6 +805,16 @@ class F_ReadList extends F_SqlReq
     {
         return $this->sqlquery;
     }    
+    // 2020-06-04
+    public function getTemplate() 
+    {
+        return $this->template;
+    }    
+    // 2020-06-04
+    public function setTemplate($argtemplate) 
+    {
+        $this->template = $argtemplate;
+    }    
         
     // Managing field state
     public function setFieldState($argfieldname, $argstate) 
@@ -803,6 +906,8 @@ class F_ReadList extends F_SqlReq
         }
         $this->fieldarray = $fieldarray;
         $this->setAllFieldState('');  
+        
+        // Ef_Log::log($physicalfieldlist, 'DEBUG physicalfieldlist in '.__FUNCTION__);
         
         $this->sqlquery = str_replace ('%fieldlist%', $physicalfieldlist, $this->template);
         $this->sqlquery = str_replace ('%orderby%', $this->orderby, $this->sqlquery);
@@ -952,7 +1057,8 @@ class F_ReadList extends F_SqlReq
         
         
         $icol = 0;
-        foreach ($this->fieldarray as $fieldname) {
+        foreach ($this->fieldarray as $fieldname) { 
+            // If we have an error here it may be sign to reinit the session for a new field          
             $resultrow[] = $row[$icol];
             
             $icol++;
@@ -1022,6 +1128,7 @@ class F_List extends F_ReadList
     protected $errorgravities = array();
     protected $errorgravity;
 	protected $errorfields = array();  
+    protected $alwaysupdated; // 01660    
 
     // index to search update fields 
     protected $isearchinupdate;
@@ -1057,6 +1164,7 @@ class F_List extends F_ReadList
         }        
     }
     
+    
     public function getPostedValue($key) 
     {
         return $this->postedarray[$key];
@@ -1083,6 +1191,13 @@ class F_List extends F_ReadList
     {
         return $this->errormsgs;
     }
+
+    // 01660 - function alwaysupdated    
+    public function setAlwaysUpdated($boolvalue)
+    {
+        $this->alwaysupdated = $boolvalue;                                                        
+    }
+
 
     // build a table in of listed value : specialized - keep a table in session too
     protected function buildListedArray($resultrows) 
@@ -1315,6 +1430,7 @@ class F_List extends F_ReadList
                 and if $_POST[$key] is different from  $this->listedarray
                 then $this->changedrows[$row] is true
                 and $this->changedarray[$key] is true               
+        -   01660 : if 'alwaysupdated' the changedarray has all fields                     
     */      
     protected function buildChangedArray() 
     {
@@ -1347,22 +1463,28 @@ class F_List extends F_ReadList
             */
             // 2016-02-03 new version : posted value are looked at, even if they are empty
             $postedvalue = $field->postHtmlToMem(Ef_Util::getArrayValue($_POST,$listedkey));
-            // Ef_Log::log($postedvalue, "postedvalue in BuildChangedArray for $listedkey");
+            Ef_Log::log($postedvalue, "postedvalue in BuildChangedArray for $listedkey", 'changedarray');
             $this->postedarray[$listedkey] = $postedvalue;
-            if ($postedvalue != $listedvalue ) {
+            // 01660 alwaysupdated function
+            // if ($postedvalue != $listedvalue ) {
+            if ($postedvalue != $listedvalue || $this->alwaysupdated) {
                 $this->postedrows[$row] = true;
                 $this->changedrows[$row] = true;
                 $this->changedarray[$listedkey] = $postedvalue; 
             }              
         }     
-        // Ef_Log::log ($this->postedrows,'$this->postedrows');
-        // Ef_Log::log ($this->changedarray,'$this->changedarray'); 
+        Ef_Log::log ($this->postedrows,'$this->postedrows', 'changedarray');
+        Ef_Log::log ($this->changedarray,'$this->changedarray', 'changedarray'); 
         return $this->changedarray; // 2016-12-15   
     }               
         
         
     protected function rowIsChanged($row) 
     {
+        // 01660
+        if ($this->alwaysupdated) {
+            return true;
+        }
         if (array_key_exists($row, $this->changedrows)) {   
             return $this->changedrows[$row];    
         } else {
@@ -1440,7 +1562,9 @@ class F_List extends F_ReadList
                 
                 $ctlinstance = new $ctlclassname;
             
-                $retcontrol = call_user_func_array (array($ctlinstance, $ctlmethname), array($oldrow, $newrow));                                
+                // 2019-10-20 added $irow parameter to control
+                // $retcontrol = call_user_func_array (array($ctlinstance, $ctlmethname), array($oldrow, $newrow));                                
+                $retcontrol = call_user_func_array (array($ctlinstance, $ctlmethname), array($oldrow, $newrow, $irow));
                 if (is_callable(array ($ctlclassname, 'getGravityErr')) ) {
                     $gravity  = call_user_func_array ( array ($ctlinstance, 'getGravityErr'), array() );
                     $this->errorgravities[] = $gravity;
@@ -1504,7 +1628,7 @@ class F_List extends F_ReadList
                 continue;
             }
             
-            $updatestring = $this->updatequery;
+            $updatestring = $this->updatequery;      
         
             $rowexists = false;
             $this->resetNextUpdateVar();            
@@ -1529,7 +1653,7 @@ class F_List extends F_ReadList
                     $_POST[$postkey] = '';                
                 }     
                 $value = $field->postHtmlToMem($_POST[$postkey]);
-                // Ef_Log::htmlEcho($value,'value in processUpdate');
+                // Ef_Log::htmlEcho($value,'value in processUpdate'); 
                 $parms['dbtype'] = Ef_Config::get('f_db_dbtype',$this->dbid); 
                 // Ef_Log::log ($parms['dbtype'], '$parms['dbtype'] in Processupdate');
                 $dbvalue = $field->memToSql($value,$parms);
@@ -1538,8 +1662,8 @@ class F_List extends F_ReadList
 
             if ($rowexists == false)
                 break;
-            
-            // Ef_Log::log ($updatestring, 'updatestring in processUpdate ');
+                                   
+            // Ef_Log::log ($updatestring, 'updatestring in processUpdate '); 
             $sqlreq = new Ef_SqlReq($updatestring, $this->dbid);
             $sqlreq->execute();            
         }                  
